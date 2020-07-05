@@ -1,14 +1,14 @@
 import json
 from datetime import datetime
 
-import requests
-
 from airflow import DAG
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.email_operator import EmailOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
+
+import requests
 
 
 def get_covid19_report_today():
