@@ -45,3 +45,9 @@ CREATE TABLE daily_covid19_reports (
   server_by VARCHAR(100)
 );
 ```
+
+## Querying COVID-19 Report Data
+
+```sql
+SELECT * FROM daily_covid19_reports;
+```
