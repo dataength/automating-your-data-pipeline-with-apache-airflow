@@ -51,3 +51,7 @@ CREATE TABLE daily_covid19_reports (
 ```sql
 SELECT * FROM daily_covid19_reports;
 ```
+
+## Starting HTTP/SMTP Server
+
+See the instructure here: [MailHog](https://github.com/mailhog/MailHog)
