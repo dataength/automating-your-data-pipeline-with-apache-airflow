@@ -60,7 +60,7 @@ def save_data_into_db():
 default_args = {
     'owner': 'dataength',
     'start_date': datetime(2020, 7, 1),
-    'email': ['dataength@example.com'],
+    'email': ['dataength@hey.team'],
 }
 with DAG('covid19_data_pipeline',
          schedule_interval='@daily',
