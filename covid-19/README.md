@@ -20,6 +20,12 @@ export AIRFLOW_HOME=$(pwd)/airflow
 airflow scheduler
 ```
 
+## Starting MySQL (Docker)
+
+```sh
+docker run --name airflow-mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:8.0.20
+```
+
 ## Creating a Database
 
 ```sql
