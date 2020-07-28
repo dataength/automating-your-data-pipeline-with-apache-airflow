@@ -26,6 +26,7 @@ services:
         max-file: "3"
     volumes:
       - ./dags:/usr/local/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
       # - ./plugins:/usr/local/airflow/plugins
     ports:
       - "8080:8080"
