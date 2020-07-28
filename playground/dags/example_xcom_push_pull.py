@@ -1,4 +1,5 @@
 from airflow import DAG
+from airflow.operators.bash_operator import BashOperator
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
@@ -44,4 +45,9 @@ with DAG('example_xcom_push_pull', schedule_interval="@once", default_args=args)
         provide_context=True,
     )
 
-    t0 >> ty >> tx
+    tz = BashOperator(
+        task_id='tz',
+        bash_command='echo {{ ti.xcom_pull(task_ids="xcom_push", key="name") }}',
+    )
+
+    t0 >> ty >> tx >> tz
