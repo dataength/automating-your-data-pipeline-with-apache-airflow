@@ -21,8 +21,12 @@ with DAG('example_docker', schedule_interval="@once", default_args=args) as dag:
         api_version='auto',
         # auto_remove=True,
         command='bash -c "echo Hello, Docker!"',
-        docker_url="unix://var/run/docker.sock",
         network_mode="bridge"
     )
 
-    t0 >> t1
+    t2 = BashOperator(
+        task_id='print_hello_docker',
+        bash_command='docker run ubuntu:latest bash -c "echo Hello, Docker!"',
+    )
+
+    t0 >> t1 >> t2
