@@ -17,7 +17,7 @@ with DAG(dag_id='file_sensor',
 
     sensor_task = FileSensor(task_id='my_file_sensor_task',
                              poke_interval=5, 
-                             fs_conn_id='fs_default', 
+                             fs_conn_id='my_fs',
                              filepath='data.txt')
 
     run_this_later = DummyOperator(
