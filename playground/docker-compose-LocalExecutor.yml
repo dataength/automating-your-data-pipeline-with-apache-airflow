@@ -38,3 +38,27 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:1.12.3
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:1.7.8
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    # Uncomment this section to keep data
+    #volumes:
+    #- ./mnt/influxdb:/var/lib/influxdb
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+    ports:
+      - "3000:3000"
