@@ -19,6 +19,7 @@ services:
     environment:
       - LOAD_EX=y
       - EXECUTOR=Local
+      - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow
     logging:
       options:
@@ -28,7 +29,7 @@ services:
       - ./dags:/usr/local/airflow/dags
       - /var/run/docker.sock:/var/run/docker.sock
       - ./fileinput:/usr/local/airflow/fileinput
-      # - ./plugins:/usr/local/airflow/plugins
+      - ./plugins:/usr/local/airflow/plugins
     ports:
       - "8080:8080"
     command: webserver
