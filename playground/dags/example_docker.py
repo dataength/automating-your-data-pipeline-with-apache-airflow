@@ -20,8 +20,11 @@ with DAG('example_docker', schedule_interval="@once", default_args=args) as dag:
         image='ubuntu:latest',
         api_version='auto',
         # auto_remove=True,
-        command='bash -c "echo Hello, Docker!"',
-        network_mode="bridge"
+        # command='/bin/bash -c \'echo "Hello, Docker! at {{ execution_date }}"\'',
+        command='ls',
+        network_mode='bridge',
+        tty=True,
+        xcom_push=True,
     )
 
     t2 = BashOperator(
