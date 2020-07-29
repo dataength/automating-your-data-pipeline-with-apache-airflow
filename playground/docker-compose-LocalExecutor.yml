@@ -28,6 +28,7 @@ services:
       - ./dags:/usr/local/airflow/dags
       - /var/run/docker.sock:/var/run/docker.sock
       - ./fileinput:/usr/local/airflow/fileinput
+      # - ./plugins:/usr/local/airflow/plugins
     ports:
       - "8080:8080"
     command: webserver
