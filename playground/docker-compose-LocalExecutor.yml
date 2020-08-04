@@ -17,7 +17,7 @@ services:
     depends_on:
       - postgres
     environment:
-      - LOAD_EX=y
+      - LOAD_EX=n
       - EXECUTOR=Local
       - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow
