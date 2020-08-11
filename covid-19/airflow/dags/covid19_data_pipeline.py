@@ -66,7 +66,7 @@ with DAG('covid19_data_pipeline',
          schedule_interval='@daily',
          default_args=default_args,
          description='A simple data pipeline for COVID-19 report',
-         catchup=False):
+         catchup=False) as dag:
 
     t1 = PythonOperator(
         task_id='get_covid19_report_today',
