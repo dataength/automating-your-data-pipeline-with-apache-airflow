@@ -78,54 +78,54 @@ services:
   # to use YARN with HADOOP. Since we are going to use
   # only the HDFS, we can skip them.
 
-  #resourcemanager:
-  #  build: ./docker/hadoop/hadoop-resourcemanager
-  #  restart: always
-  #  container_name: resourcemanager
-  #  depends_on:
-  #    - namenode
-  #    - datanode
-  #  environment:
-  #    - SERVICE_PRECONDITION=namenode:9870 datanode:9864
-  #  healthcheck:
-  #    test: [ "CMD", "nc", "-z", "resourcemanager", "8088" ]
-  #    timeout: 45s
-  #    interval: 10s
-  #    retries: 10
+  resourcemanager:
+    build: ./docker/hadoop/hadoop-resourcemanager
+    restart: always
+    container_name: resourcemanager
+    depends_on:
+      - namenode
+      - datanode
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870 datanode:9864
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "resourcemanager", "8088" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
 
-  #nodemanager:
-  #  build: ./docker/hadoop/hadoop-nodemanager
-  #  restart: always
-  #  container_name: nodemanager
-  #  depends_on:
-  #    - namenode
-  #    - datanode
-  #    - resourcemanager
-  #  environment:
-  #    - SERVICE_PRECONDITION=namenode:9870 datanode:9864 resourcemanager:8088
-  #  healthcheck:
-  #    test: [ "CMD", "nc", "-z", "nodemanager", "8042" ]
-  #    timeout: 45s
-  #    interval: 10s
-  #    retries: 10
+  nodemanager:
+    build: ./docker/hadoop/hadoop-nodemanager
+    restart: always
+    container_name: nodemanager
+    depends_on:
+      - namenode
+      - datanode
+      - resourcemanager
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870 datanode:9864 resourcemanager:8088
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "nodemanager", "8042" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
 
-  #historyserver:
-  #  build: ./docker/hadoop/hadoop-historyserver
-  #  restart: always
-  #  container_name: historyserver
-  #  volumes:
-  #    - ./mnt/hadoop/historyserver:/hadoop/yarn/timeline
-  #  depends_on:
-  #    - namenode
-  #    - datanode
-  #    - resourcemanager
-  #  environment:
-  #    - SERVICE_PRECONDITION=namenode:9870 datanode:9864 resourcemanager:8088
-  #  healthcheck:
-  #    test: [ "CMD", "nc", "-z", "historyserver", "8188" ]
-  #    timeout: 45s
-  #    interval: 10s
-  #    retries: 10
+  historyserver:
+    build: ./docker/hadoop/hadoop-historyserver
+    restart: always
+    container_name: historyserver
+    volumes:
+      - ./mnt/hadoop/historyserver:/hadoop/yarn/timeline
+    depends_on:
+      - namenode
+      - datanode
+      - resourcemanager
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870 datanode:9864 resourcemanager:8088
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "historyserver", "8188" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
 
   hive-metastore:
     build: ./docker/hive/hive-metastore
