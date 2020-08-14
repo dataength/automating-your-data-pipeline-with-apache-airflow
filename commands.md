@@ -196,7 +196,7 @@ STORED AS TEXTFILE;
 ```
 
 ```sql
-LOAD DATA INPATH '/transactions-cleaned.csv' OVERWRITE INTO TABLE transactions PARTITION(execution_date='2019-11-15');
+LOAD DATA INPATH '/transactions-cleaned.csv' OVERWRITE INTO TABLE transactions PARTITION(execution_date=date'2019-11-15');
 ```
 
 ## Find Answers
