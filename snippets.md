@@ -84,6 +84,26 @@ my_file_sensor_task = FileSensor(
 ```
 
 ```python
+dag = DAG(
+    'test_schedule',
+    schedule_interval='0 0 * * THU',
+    default_args=default_args,
+    start_date=timezone.datetime(2009, 1, 7),
+    catchup=False
+)
+
+t0 = BashOperator(
+    task_id='echo',
+    bash_command='echo "Get data on {{ macros.ds_add(ds, -1) }}"',
+    dag=dag,
+)
+```
+
+```sh
+airflow backfill -s 2009-01-01 -e 2009-02-05 --reset_dagruns test_schedule
+```
+
+```python
 from airflow.operators.hive_operator import HiveOperator
 
 
