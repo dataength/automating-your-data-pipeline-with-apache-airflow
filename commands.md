@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   display       INT,
   tpr_only      INT
 )
-PARTITIONED BY (execution_date STRING)
+PARTITIONED BY (execution_date DATE)
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
 STORED AS TEXTFILE;
 ```
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS zkan_product_transactions (
   units               INT,
   visits              INT
 )
-PARTITIONED BY (execution_date STRING)
+PARTITIONED BY (execution_date DATE)
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
 STORED AS TEXTFILE;
 ```
