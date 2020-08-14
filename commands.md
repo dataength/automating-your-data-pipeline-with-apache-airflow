@@ -198,3 +198,33 @@ STORED AS TEXTFILE;
 ```sql
 LOAD DATA INPATH '/transactions-cleaned.csv' OVERWRITE INTO TABLE transactions PARTITION(execution_date='2019-11-15');
 ```
+
+## Find Answers
+
+```sql
+CREATE TABLE IF NOT EXISTS zkan_product_transactions (
+  product_description STRING,
+  price               DECIMAL(10, 2),
+  units               INT,
+  visits              INT
+)
+PARTITIONED BY (execution_date STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+```
+
+```sql
+INSERT INTO TABLE zkan_product_transactions
+SELECT product_lookup.description,
+       transactions.price,
+       transactions.units,
+       transactions.visits,
+       transactions.execution_date
+FROM transactions
+JOIN product_lookup ON transactions.upc = product_lookup.upc
+WHERE transactions.execution_date = '2019-11-15'
+```
+
+```sql
+SELECT * FROM zkan_product_transactions;
+```
