@@ -159,6 +159,12 @@ SELECT * FROM store_lookup WHERE parking_space_qty IS NOT NULL;
 
 ### Transactions
 
+Convert week end date to date using Pandas
+
+```python
+pd.to_datetime(transactions.WEEK_END_DATE, format='%d-%b-%y')
+```
+
 Select only needed columns using Pandas
 
 ```python
