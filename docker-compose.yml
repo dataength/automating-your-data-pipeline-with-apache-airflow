@@ -6,6 +6,7 @@ services:
 ######################################################
   postgres:
     build: './docker/postgres'
+    image: dataength/postgres:skooldio
     restart: always
     container_name: postgres
     ports:
@@ -44,6 +45,7 @@ services:
 ######################################################
   namenode:
     build: ./docker/hadoop/hadoop-namenode
+    image: dataength/hadoop-namenode:skooldio
     restart: always
     container_name: namenode
     ports:
@@ -60,6 +62,7 @@ services:
 
   datanode:
     build: ./docker/hadoop/hadoop-datanode
+    image: dataength/hadoop-datanode:skooldio
     restart: always
     container_name: datanode
     depends_on:
@@ -80,6 +83,7 @@ services:
 
   resourcemanager:
     build: ./docker/hadoop/hadoop-resourcemanager
+    image: dataength/hadoop-resourcemanager:skooldio
     restart: always
     container_name: resourcemanager
     depends_on:
@@ -95,6 +99,7 @@ services:
 
   nodemanager:
     build: ./docker/hadoop/hadoop-nodemanager
+    image: dataength/hadoop-nodemanager:skooldio
     restart: always
     container_name: nodemanager
     depends_on:
@@ -111,6 +116,7 @@ services:
 
   historyserver:
     build: ./docker/hadoop/hadoop-historyserver
+    image: dataength/hadoop-historyserver:skooldio
     restart: always
     container_name: historyserver
     volumes:
@@ -129,6 +135,7 @@ services:
 
   hive-metastore:
     build: ./docker/hive/hive-metastore
+    image: dataength/hive-metastore:skooldio
     restart: always
     container_name: hive-metastore
     depends_on:
@@ -147,6 +154,7 @@ services:
 
   hive-server:
     build: ./docker/hive/hive-server
+    image: dataength/hive-server:skooldio
     restart: always
     container_name: hive-server
     depends_on:
@@ -164,6 +172,7 @@ services:
 
   hive-webhcat:
     build: ./docker/hive/hive-webhcat
+    image: dataength/hive-webhcat:skooldio
     restart: always
     container_name: hive-webhcat
     depends_on:
@@ -178,6 +187,7 @@ services:
 
   hue:
     build: ./docker/hue
+    image: dataength/hue:skooldio
     restart: always
     container_name: hue
     depends_on:
@@ -200,6 +210,7 @@ services:
 ######################################################
   # spark-master:
   #   build: ./docker/spark/spark-master
+  #   image: dataength/spark-master:skooldio
   #   restart: always
   #   container_name: spark-master
   #   ports:
@@ -216,6 +227,7 @@ services:
 
   # spark-worker:
   #   build: ./docker/spark/spark-worker
+  #   image: dataength/spark-worker:skooldio
   #   depends_on:
   #     - spark-master
   #   ports:
@@ -231,6 +243,7 @@ services:
 
   # livy:
   #   build: ./docker/livy
+  #   image: dataength/livy:skooldio
   #   restart: always
   #   container_name: livy
   #   depends_on:
@@ -250,7 +263,6 @@ services:
 ######################################################
 # AIRFLOW
 ######################################################
-
   airflow-metastore:
     image: postgres:latest
     restart: always
@@ -269,6 +281,7 @@ services:
 
   airflow:
     build: ./docker/airflow
+    image: dataength/airflow:skooldio
     restart: always
     container_name: airflow
     environment:
@@ -295,6 +308,7 @@ services:
 
   # scheduler:
   #   build: ./docker/airflow
+  #   image: dataength/airflow:skooldio
   #   restart: always
   #   container_name: airflow-scheduler
   #   depends_on:
@@ -311,6 +325,7 @@ services:
 
   # worker:
   #   build: ./docker/airflow
+  #   image: dataength/airflow:skooldio
   #   restart: always
   #   depends_on:
   #     - postgres
@@ -326,6 +341,7 @@ services:
 
   # flower:
   #   build: ./docker/airflow
+  #   image: dataength/airflow:skooldio
   #   restart: always
   #   container_name: airflow-flower
   #   depends_on:
@@ -343,6 +359,16 @@ services:
   #     timeout: 45s
   #     interval: 10s
   #     retries: 10
+
+######################################################
+# EMAIL SERVICE
+######################################################
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 ######################################################
 # NETWORK
