@@ -17,6 +17,10 @@ STORED AS TEXTFILE;
 
 ### Insert new row into table
 
+```
+set hive.exec.dynamic.partition.mode=nonstrict;
+```
+
 ```sql
 INSERT INTO customer_transactions PARTITION(txn_date) VALUES('123', 1860, 'Credit', '2019-04-14');
 INSERT INTO customer_transactions PARTITION(txn_date) VALUES('121', 588, 'Debit', '2019-04-14');
