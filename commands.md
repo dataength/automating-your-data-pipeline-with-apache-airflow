@@ -19,6 +19,7 @@ STORED AS TEXTFILE;
 
 ```sql
 INSERT INTO customer_transactions PARTITION(txn_date) VALUES('123', 1860, 'Credit', '2019-04-14');
+INSERT INTO customer_transactions PARTITION(txn_date) VALUES('121', 588, 'Debit', '2019-04-14');
 ```
 
 ### Show partitions
@@ -29,16 +30,25 @@ SHOW PARTITIONS customer_transactions;
 
 ### Load data into table
 
+2019-11-15.txt
+```
+120|2500|Credit
+121|1050.50|Credit
+122|100|Debit
+122|500|Credit
+123|100|Debit
+```
+
 Appending
 
 ```sql
-LOAD DATA INPATH '/data.txt' INTO TABLE customer_transactions PARTITION(txn_date='2019-11-15');
+LOAD DATA INPATH '/2019-11-15.txt' INTO TABLE customer_transactions PARTITION(txn_date='2019-11-15');
 ```
 
 Overwriting
 
 ```sql
-LOAD DATA INPATH '/data.txt' OVERWRITE INTO TABLE customer_transactions PARTITION(txn_date='2019-11-15');
+LOAD DATA INPATH '/2019-11-15.txt' OVERWRITE INTO TABLE customer_transactions PARTITION(txn_date='2019-11-15');
 ```
 
 ### Query data
@@ -58,7 +68,7 @@ CREATE TABLE IF NOT EXISTS amount_summary (
  txn_type     VARCHAR(100),
  total_amount DECIMAL(38, 2)
 )
-PARTITIONED BY (txn_date STRING)
+PARTITIONED BY (txn_date DATE)
 ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n'
 STORED AS TEXTFILE;
 ```
