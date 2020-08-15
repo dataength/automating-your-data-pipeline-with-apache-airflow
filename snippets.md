@@ -107,6 +107,22 @@ airflow backfill -s 2009-01-01 -e 2009-02-05 --reset_dagruns test_schedule
 from airflow.operators.hive_operator import HiveOperator
 
 
+create_some_table = HiveOperator(
+    task_id='create_some_table',
+    hive_cli_conn_id='my_hive_conn',
+    hql='''
+        CREATE EXTERNAL TABLE IF NOT EXISTS some_table(
+            id    INT,
+            usd   DOUBLE,
+            baht  DOUBLE,
+            class STRING
+        )
+        ROW FORMAT DELIMITED
+        FIELDS TERMINATED BY ','
+        STORED AS TEXTFILE
+    '''
+)
+
 summarize_amount = HiveOperator(
     task_id='summarize_amount',
     hive_cli_conn_id='my_hive_conn',
