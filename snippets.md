@@ -177,6 +177,7 @@ branching = BranchPythonOperator(
     dag=dag,
 )
 
+# https://airflow.apache.org/docs/stable/concepts.html#trigger-rules
 join = DummyOperator(
     task_id='join',
     trigger_rule='none_failed_or_skipped',
