@@ -6,3 +6,6 @@ docker build -t hadoop-base docker/hadoop/hadoop-base && \
 docker build -t hive-base docker/hive/hive-base && \
 docker build -t spark-base docker/spark/spark-base && \
 docker-compose build
+
+# Build Puckel's image
+#cd docker && docker build -t puckel/docker-airflow:skooldio .
