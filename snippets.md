@@ -42,7 +42,7 @@ from airflow.operators.dummy_operator import DummyOperator
 
 
 my_1st_dummy_task = DummyOperator(
-    task_id='my_1st_dummy_task', 
+    task_id='my_1st_dummy_task',
     dag=dag,
 )
 ```
@@ -101,6 +101,10 @@ t0 = BashOperator(
 
 ```sh
 airflow backfill -s 2009-01-01 -e 2009-02-05 --reset_dagruns test_schedule
+```
+
+```sh
+airflow backfill -s 2009-01-01 -e 2009-01-16 --donot_pickle --reset_dagruns load_transactions_pipeline
 ```
 
 ```python
@@ -220,7 +224,7 @@ docs = '''
 
     This DAG connects data from one source to another,
     performs necessary transformations,
-    and creates a set of tables that can be used by analysts 
+    and creates a set of tables that can be used by analysts
 
     #### Outputs
 
@@ -231,14 +235,14 @@ docs = '''
 
     #### Owner
 
-    For any questions or concerns, please contact 
+    For any questions or concerns, please contact
     [me@mycompany.com](mailto:me@mycompany.com).
 '''
 
 dag.doc_md = docs
 
 t0 = DummyOperator(
-    task_id='t0', 
+    task_id='t0',
     dag=dag,
 )
 t0.doc_md = '''
