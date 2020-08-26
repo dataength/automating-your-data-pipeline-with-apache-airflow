@@ -1,6 +1,6 @@
 # /!\ WARNING: RESET EVERYTHING! 
 # Remove all containers/networks/volumes/images and data in db
-docker-compose down
+docker-compose -f docker-compose.full.yml down
 docker system prune -f
 docker volume prune -f
 docker network prune -f

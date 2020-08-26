@@ -1,0 +1,141 @@
+version: '3.8'
+services:
+
+######################################################
+# DATABASE SERVICE
+######################################################
+  postgres:
+    build: './docker/postgres'
+    image: dataength/postgres:skooldio
+    restart: always
+    container_name: postgres
+    ports:
+      - "32769:5432"
+    #volumes:
+      #- ./mnt/postgres:/var/lib/postgresql/data/pgdata
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow_db
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+
+  # adminer:
+  #   image: wodby/adminer:latest
+  #   restart: always
+  #   container_name: adminer
+  #   ports:
+  #     - "32767:9000"
+  #   environment:
+  #     - ADMINER_DEFAULT_DB_DRIVER=psql
+  #     - ADMINER_DEFAULT_DB_HOST=postgres
+  #     - ADMINER_DEFAULT_DB_NAME=airflow_db
+  #   healthcheck:
+  #     test: [ "CMD", "nc", "-z", "adminer", "9000" ]
+  #     timeout: 45s
+  #     interval: 10s
+  #     retries: 10
+
+######################################################
+# AIRFLOW
+######################################################
+  airflow:
+    build: ./docker/airflow
+    image: dataength/airflow:skooldio
+    restart: always
+    container_name: airflow
+    environment:
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
+      - ./mnt/airflow/dags:/usr/local/airflow/dags
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "airflow", "8080" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+
+  redis:
+    image: 'redis:5.0.5'
+    container_name: redis
+
+  scheduler:
+    build: ./docker/airflow
+    image: dataength/airflow:skooldio
+    restart: always
+    container_name: airflow-scheduler
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
+      - ./mnt/airflow/dags:/usr/local/airflow/dags
+    command: ["airflow", "scheduler"]
+
+  worker:
+    build: ./docker/airflow
+    image: dataength/airflow:skooldio
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
+      - ./mnt/airflow/dags:/usr/local/airflow/dags
+    command: ["airflow", "worker"]
+
+  flower:
+    build: ./docker/airflow
+    image: dataength/airflow:skooldio
+    restart: always
+    container_name: airflow-flower
+    depends_on:
+      - redis
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
+      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
+    ports:
+      - "5555:5555"
+    command: ["airflow", "flower"]
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "flower", "5555" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+
+######################################################
+# EMAIL SERVICE
+######################################################
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+######################################################
+# NETWORK
+######################################################
+networks:
+  default:
+    name: airflow-network
