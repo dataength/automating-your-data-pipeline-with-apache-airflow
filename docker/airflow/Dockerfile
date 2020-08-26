@@ -57,16 +57,13 @@ COPY ./start-airflow.sh ./start-airflow.sh
 RUN chmod +x ./start-airflow.sh
 
 # Set the username to use
-#USER airflow
+USER airflow
 
 # Create the folder dags inside $AIRFLOW_HOME
 RUN mkdir -p ${AIRFLOW_HOME}/dags
 
 # Expose ports (just to indicate that this container needs to map port)
 EXPOSE 8080
-
-# Modify defaultFS according to the IP of remote server
-COPY ./core-site.xml /etc/hadoop/core-site.xml
 
 # Execute start-airflow.sh
 CMD [ "./start-airflow.sh" ]
