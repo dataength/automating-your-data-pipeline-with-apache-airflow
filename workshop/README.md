@@ -28,9 +28,9 @@ Creating table with partition
 
 ```sql
 CREATE TABLE IF NOT EXISTS customer_transactions (
-  customer_id VARCHAR(40),
-  txn_amount DECIMAL(38, 2),
-  txn_type  VARCHAR(100)
+    customer_id VARCHAR(40),
+    txn_amount DECIMAL(38, 2),
+    txn_type  VARCHAR(100)
 )
 PARTITIONED BY (txn_date STRING)
 ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n'
@@ -98,8 +98,8 @@ Querying then insert with partition
 
 ```sql
 CREATE TABLE IF NOT EXISTS amount_summary (
- txn_type     VARCHAR(100),
- total_amount DECIMAL(38, 2)
+    txn_type     VARCHAR(100),
+    total_amount DECIMAL(38, 2)
 )
 PARTITIONED BY (txn_date DATE)
 ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n'
