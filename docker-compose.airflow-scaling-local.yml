@@ -11,8 +11,8 @@ services:
     container_name: postgres
     ports:
       - "32769:5432"
-    #volumes:
-      #- ./mnt/postgres:/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./mnt/postgres:/var/lib/postgresql/data/pgdata
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
@@ -41,61 +41,6 @@ services:
   #     retries: 10
 
 ######################################################
-# SPARK SERVICES
-######################################################
-  spark-master:
-    build: ./docker/spark/spark-master
-    image: dataength/spark-master:skooldio
-    restart: always
-    container_name: spark-master
-    ports:
-      - "32766:8082"
-      - "32765:7077"
-    volumes:
-      - ./mnt/spark/apps:/opt/spark-apps
-      - ./mnt/spark/data:/opt/spark-data
-    healthcheck:
-      test: [ "CMD", "nc", "-z", "spark-master", "8082" ]
-      timeout: 45s
-      interval: 10s
-      retries: 10
-
-  spark-worker:
-    build: ./docker/spark/spark-worker
-    image: dataength/spark-worker:skooldio
-    depends_on:
-      - spark-master
-    ports:
-      - "32764:8081"
-    volumes:
-      - ./mnt/spark/apps:/opt/spark-apps
-      - ./mnt/spark/data:/opt/spark-data
-    healthcheck:
-      test: [ "CMD", "nc", "-z", "spark-worker", "8081" ]
-      timeout: 45s
-      interval: 10s
-      retries: 10
-
-  livy:
-    build: ./docker/livy
-    image: dataength/livy:skooldio
-    restart: always
-    container_name: livy
-    depends_on:
-      - spark-worker
-    ports:
-      - "32758:8998"
-    environment:
-      - SPARK_MASTER_ENDPOINT=spark-master
-      - SPARK_MASTER_PORT=7077
-      - DEPLOY_MODE=client
-    healthcheck:
-      test: [ "CMD", "nc", "-z", "livy", "8998" ]
-      timeout: 45s
-      interval: 10s
-      retries: 10
-
-######################################################
 # AIRFLOW
 ######################################################
   airflow:
@@ -105,7 +50,7 @@ services:
     container_name: airflow
     environment:
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
-      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
@@ -131,9 +76,6 @@ services:
 ######################################################
 # NETWORK
 ######################################################
-
-# Change name of default network otherwise URI invalid for HIVE
-# because of the _ contained by default network
 networks:
   default:
     name: airflow-network

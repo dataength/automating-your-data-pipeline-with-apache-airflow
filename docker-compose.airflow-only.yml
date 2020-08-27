@@ -11,8 +11,8 @@ services:
     container_name: postgres
     ports:
       - "32769:5432"
-    #volumes:
-      #- ./mnt/postgres:/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./mnt/postgres:/var/lib/postgresql/data/pgdata
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
@@ -50,10 +50,8 @@ services:
     container_name: airflow
     environment:
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
-      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
-      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
-      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
@@ -61,64 +59,6 @@ services:
       - 8080:8080
     healthcheck:
       test: [ "CMD", "nc", "-z", "airflow", "8080" ]
-      timeout: 45s
-      interval: 10s
-      retries: 10
-
-  redis:
-    image: 'redis:5.0.5'
-    container_name: redis
-
-  scheduler:
-    build: ./docker/airflow
-    image: dataength/airflow:skooldio
-    restart: always
-    container_name: airflow-scheduler
-    depends_on:
-      - postgres
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
-      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
-      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
-    volumes:
-      - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
-      - ./mnt/airflow/dags:/usr/local/airflow/dags
-    command: ["airflow", "scheduler"]
-
-  worker:
-    build: ./docker/airflow
-    image: dataength/airflow:skooldio
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
-      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
-      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
-    volumes:
-      - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
-      - ./mnt/airflow/dags:/usr/local/airflow/dags
-    command: ["airflow", "worker"]
-
-  flower:
-    build: ./docker/airflow
-    image: dataength/airflow:skooldio
-    restart: always
-    container_name: airflow-flower
-    depends_on:
-      - redis
-    environment:
-      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
-      - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
-      - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
-    ports:
-      - "5555:5555"
-    command: ["airflow", "flower"]
-    healthcheck:
-      test: [ "CMD", "nc", "-z", "flower", "5555" ]
       timeout: 45s
       interval: 10s
       retries: 10
