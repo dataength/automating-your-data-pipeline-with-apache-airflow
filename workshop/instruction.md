@@ -42,3 +42,53 @@ t2 = DummyOperator(
 
 t1 >> t2
 ```
+
+### BashOperator
+
+```py
+from airflow.operators.bash_operator import BashOperator
+
+
+echo_hello = BashOperator(
+    task_id='echo_hello',
+    bash_command='echo hello',
+    dag=dag
+)
+```
+
+### PythonOperator
+
+```py
+from airflow.operators.python_operator import PythonOperator
+
+
+def hello():
+    return 'Hello, Python'
+
+
+say_hello = PythonOperator(
+    task_id='say_hello',
+    python_callable=hello,
+    dag=dag
+)
+```
+
+### Logging
+
+```py
+def print_log_messages():
+    logging.debug('This is a debug message')
+    logging.info('This is an info message')
+    logging.warning('This is a warning message')
+    logging.error('This is an error message')
+    logging.critical('This is a critical message')
+
+    return 'Whatever is returned also gets printed in the logs'
+
+
+run_this = PythonOperator(
+    task_id='print_log_messages',
+    python_callable=print_log_messages,
+    dag=dag,
+)
+```
