@@ -85,6 +85,9 @@ say_hello = PythonOperator(
 ### Logging
 
 ```py
+import logging
+
+
 def print_log_messages():
     logging.debug('This is a debug message')
     logging.info('This is an info message')
