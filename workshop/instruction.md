@@ -415,6 +415,8 @@ start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> create_s
 create_store_lookup_table >> load_data_to_hive_table >> end
 ```
 
+🎉
+
 ### Transaction Load Pipeline
 
 Backfill
