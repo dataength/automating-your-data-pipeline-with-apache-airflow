@@ -645,11 +645,12 @@ end = DummyOperator(
 start >> end
 ```
 
-
+Here comes the tricky part. This is where we want to process the data as soon as the transaction data are available in our data warehouse (Hive). This also means that as soon as we have a new partition created in the Transaction Load Pipeline above, this pipeline should be automatically run. In this workshop, we'll use `NamedHivePartitionSensor` to keep monitoring a new partition.
 
 ```py
 from airflow.sensors.named_hive_partition_sensor import NamedHivePartitionSensor
-# Define your pipeline here
+
+
 check_named_partition = NamedHivePartitionSensor(
     task_id='check_named_partition',
     partition_names=['transactions/execution_date={{ macros.ds_add(ds, -1) }}'],
@@ -657,8 +658,13 @@ check_named_partition = NamedHivePartitionSensor(
     poke_interval=30,
     dag=dag,
 )
+```
 
+We'll then create a table to store the results.
+
+```py
 from airflow.operators.hive_operator import HiveOperator
+
 
 create_product_transactions_table = HiveOperator(
     task_id='create_product_transactions_table',
@@ -676,7 +682,11 @@ create_product_transactions_table = HiveOperator(
     ''',
     dag=dag,
 )
+```
 
+Now we join the two tables (Product Lookup and Transactions) and insert data in the new table we created above.
+
+```py
 add_new_product_transactions = HiveOperator(
     task_id='add_new_product_transactions',
     hive_cli_conn_id='my_hive_conn',
@@ -694,10 +704,17 @@ add_new_product_transactions = HiveOperator(
     ''',
     dag=dag,
 )
+```
 
-# Define DAG dependencies
+The final DAG will look like this.
+
+```py
 start >> check_named_partition >> create_product_transactions_table >> add_new_product_transactions >> end
 ```
+
+That's it! To answer the question "What is the range of prices offered on products?", we can group the data by the product description and find min and max prices to get the range of prices of each product.
+
+Congratulations! We've just built a complex data pipeline and should have enough knowledge to build more complex ones. Have fun! :)
 
 🎉
 
