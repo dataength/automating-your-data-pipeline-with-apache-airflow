@@ -5,7 +5,7 @@
 1. [Let's Build a Data Pipeline](#lets-build-a-data-pipeline)
     * [Product Lookup Pipeline](#product-lookup-pipeline)
     * [Store Lookup Pipeline](#store-lookup-pipeline)
-    * [Transaction Load Pipeline](#transaction-lookup-pipeline)
+    * [Transaction Load Pipeline](#transaction-load-pipeline)
     * [Product Price Range Pipeline](#product-price-range-pipeline)
 1. [Scaling Airflow](#scaling-airflow)
 
