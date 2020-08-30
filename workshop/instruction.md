@@ -786,7 +786,13 @@ start >> [t1, t2, t3, t4, t5] >> end
 ### SequentialExecutor
 
 ```sh
-docker-compose -f docker-compose.airflow-only.yml up
+docker-compose -f docker-compose.airflow-only.yml up -d
+```
+
+After finishing this section, run:
+
+```sh
+docker-compose -f docker-compose.airflow-only.yml down
 ```
 
 Note that if we'll still running some Docker compose stack, let's stop it first by running this command below.
@@ -804,15 +810,27 @@ docker-compose -f docker-compose.airflow-hive.yml down
 ### LocalExecutor
 
 ```sh
-docker-compose -f docker-compose.airflow-scaling-local.yml up
+docker-compose -f docker-compose.airflow-scaling-local.yml up -d
+```
+
+After finishing this section, run:
+
+```sh
+docker-compose -f docker-compose.airflow-scaling-local.yml down
 ```
 
 ### CeleryExecutor
 
 ```sh
-docker-compose -f docker-compose.airflow-scaling-celery.yml up
+docker-compose -f docker-compose.airflow-scaling-celery.yml up -d
 ```
 
 We can monitor the workers and tasks in the Flower which is running at port 5555.
+
+After finishing this section, run:
+
+```sh
+docker-compose -f docker-compose.airflow-scaling-celery.yml down
+```
 
 🎉
