@@ -1,5 +1,14 @@
 # Workshop Instruction
 
+1. [Build Your First DAG](#build-your-first-dag)
+1. [Airflow CLI](#airflow-cli)
+1. [Let's Build a Data Pipeline](#lets-build-a-data-pipeline)
+    * [Product Lookup Pipeline](#product-lookup-pipeline)
+    * [Store Lookup Pipeline](#store-lookup-pipeline)
+    * [Transaction Load Pipeline](#transaction-lookup-pipeline)
+    * [Product Price Range Pipeline](#product-price-range-pipeline)
+1. [Scaling Airflow](#scaling-airflow)
+
 ## Build Your First DAG
 
 Let's create a new file named `my_dag.py`.
