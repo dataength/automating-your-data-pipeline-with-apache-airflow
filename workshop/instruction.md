@@ -712,6 +712,12 @@ The final DAG will look like this.
 start >> check_named_partition >> create_product_transactions_table >> add_new_product_transactions >> end
 ```
 
+Let's test it with the backfill command:
+
+```sh
+airflow backfill -s 2009-01-10 -e 2009-01-16 --reset_dagruns product_price_range_pipeline
+```
+
 That's it! To answer the question "What is the range of prices offered on products?", we can group the data by the product description and find min and max prices to get the range of prices of each product.
 
 Congratulations! We've just built a complex data pipeline and should have enough knowledge to build more complex ones. Have fun! :)
