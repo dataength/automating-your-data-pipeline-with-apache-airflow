@@ -598,13 +598,13 @@ start >> query_data_by_week_end_date >> remove_empty_columns >> upload_to_hdfs >
 Backfill will play an important role here. We can use it to get the data stored in the past and continue getting the data in the future without modifying our DAG. Let's try the command below.
 
 ```sh
-airflow backfill -s 2009-01-01 -e 2009-02-05 --reset_dagruns transaction_load_pipeline
+airflow backfill -s 2009-01-10 -e 2009-01-16 --reset_dagruns transaction_load_pipeline
 ```
 
 In case of having many workers, use `--donot_pickle` to not attempt to pickle the DAG object to send over to the workers. The workers will run their version of the code. This way we don't need to deal with the DAG serialization issue that may happen.
 
 ```sh
-airflow backfill -s 2009-01-01 -e 2009-01-16 --donot_pickle --reset_dagruns transaction_load_pipeline
+airflow backfill -s 2009-01-10 -e 2009-01-16 --donot_pickle --reset_dagruns transaction_load_pipeline
 ```
 
 🎉
