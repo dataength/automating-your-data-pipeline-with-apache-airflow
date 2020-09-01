@@ -9,8 +9,11 @@ services:
     image: dataength/postgres:skooldio
     restart: always
     container_name: postgres
-    ports:
-      - "32769:5432"
+
+  airflow-metastore:
+    image: postgres:11.4-alpine
+    restart: always
+    container_name: airflow-metastore
     volumes:
       - ./mnt/postgres:/var/lib/postgresql/data/pgdata
     environment:
@@ -23,22 +26,6 @@ services:
       timeout: 45s
       interval: 10s
       retries: 10
-
-  # adminer:
-  #   image: wodby/adminer:latest
-  #   restart: always
-  #   container_name: adminer
-  #   ports:
-  #     - "32767:9000"
-  #   environment:
-  #     - ADMINER_DEFAULT_DB_DRIVER=psql
-  #     - ADMINER_DEFAULT_DB_HOST=postgres
-  #     - ADMINER_DEFAULT_DB_NAME=airflow_db
-  #   healthcheck:
-  #     test: [ "CMD", "nc", "-z", "adminer", "9000" ]
-  #     timeout: 45s
-  #     interval: 10s
-  #     retries: 10
 
 ######################################################
 # HADOOP SERVICES
@@ -219,7 +206,7 @@ services:
     environment:
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
       - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
