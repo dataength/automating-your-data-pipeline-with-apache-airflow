@@ -250,7 +250,7 @@ create_product_lookup_table = HiveOperator(
     task_id='create_product_lookup_table',
     hive_cli_conn_id='my_hive_conn',
     hql='''
-        CREATE TABLE IF NOT EXISTS product_lookup(
+        CREATE TABLE IF NOT EXISTS dim_product_lookup (
             UPC          STRING,
             DESCRIPTION  STRING,
             MANUFACTURER STRING,
@@ -279,7 +279,7 @@ load_data_to_hive_table = HiveOperator(
     task_id='load_data_to_hive_table',
     hive_cli_conn_id='my_hive_conn',
     hql='''
-        LOAD DATA INPATH '/products-with-good-columns.csv' OVERWRITE INTO TABLE product_lookup;
+        LOAD DATA INPATH '/products-with-good-columns.csv' OVERWRITE INTO TABLE dim_product_lookup;
     ''',
     dag=dag,
 )
@@ -377,7 +377,7 @@ create_store_lookup_table = HiveOperator(
     task_id='create_store_lookup_table',
     hive_cli_conn_id='my_hive_conn',
     hql='''
-        CREATE TABLE IF NOT EXISTS store_lookup (
+        CREATE TABLE IF NOT EXISTS dim_store_lookup (
             store_id                 INT,
             store_name               VARCHAR(100),
             address_city_name        VARCHAR(300),
@@ -399,7 +399,7 @@ load_data_to_hive_table = HiveOperator(
     task_id='load_data_to_hive_table',
     hive_cli_conn_id='my_hive_conn',
     hql='''
-        LOAD DATA INPATH '/store-with-good-columns.csv' OVERWRITE INTO TABLE store_lookup;
+        LOAD DATA INPATH '/store-with-good-columns.csv' OVERWRITE INTO TABLE dim_store_lookup;
     ''',
     dag=dag,
 )
@@ -553,7 +553,7 @@ create_transations_table = HiveOperator(
     task_id='create_transations_table',
     hive_cli_conn_id='my_hive_conn',
     hql='''
-        CREATE TABLE IF NOT EXISTS transactions (
+        CREATE TABLE IF NOT EXISTS fact_transactions (
             week_end_date VARCHAR(40),
             store_num     INT,
             upc           VARCHAR(100),
@@ -582,7 +582,7 @@ load_data_to_hive_table = HiveOperator(
     task_id='load_data_to_hive_table',
     hive_cli_conn_id='my_hive_conn',
     hql='''
-        LOAD DATA INPATH '/transaction-cleaned-{{ macros.ds_add(ds, -1) }}.csv' OVERWRITE INTO TABLE transactions PARTITION(execution_date=date'{{ macros.ds_add(ds, -1) }}');
+        LOAD DATA INPATH '/transaction-cleaned-{{ macros.ds_add(ds, -1) }}.csv' OVERWRITE INTO TABLE fact_transactions PARTITION(execution_date=date'{{ macros.ds_add(ds, -1) }}');
     ''',
     dag=dag,
 )
