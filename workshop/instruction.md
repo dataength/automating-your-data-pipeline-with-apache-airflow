@@ -410,8 +410,7 @@ end = DummyOperator(
 )
 
 # Define DAG dependencies
-start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> create_store_lookup_table
-create_store_lookup_table >> load_data_to_hive_table >> end
+start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> create_store_lookup_table >> load_data_to_hive_table >> end
 ```
 
 🎉
@@ -591,7 +590,6 @@ load_data_to_hive_table = HiveOperator(
 The final DAG will look like:
 
 ```py
-# Define DAG dependencies
 start >> query_data_by_week_end_date >> remove_empty_columns >> upload_to_hdfs >> create_transations_table >> load_data_to_hive_table >> end
 ```
 
@@ -653,7 +651,7 @@ from airflow.sensors.named_hive_partition_sensor import NamedHivePartitionSensor
 
 check_named_partition = NamedHivePartitionSensor(
     task_id='check_named_partition',
-    partition_names=['transactions/execution_date={{ macros.ds_add(ds, -1) }}'],
+    partition_names=['fact_transactions/execution_date={{ macros.ds_add(ds, -1) }}'],
     metastore_conn_id='my_hive_metastore_conn',
     poke_interval=30,
     dag=dag,
@@ -693,14 +691,14 @@ add_new_product_transactions = HiveOperator(
     hiveconfs={'hive.exec.dynamic.partition.mode': 'nonstrict'},
     hql='''
         INSERT INTO TABLE zkan_product_transactions
-        SELECT product_lookup.description,
-            transactions.price,
-            transactions.units,
-            transactions.visits,
-            transactions.execution_date
-        FROM transactions
-        JOIN product_lookup ON transactions.upc = product_lookup.upc
-        WHERE transactions.execution_date = '{{ macros.ds_add(ds, -1) }}'
+        SELECT dim_product_lookup.description,
+            fact_transactions.price,
+            fact_transactions.units,
+            fact_transactions.visits,
+            fact_transactions.execution_date
+        FROM fact_transactions
+        JOIN dim_product_lookup ON fact_transactions.upc = dim_product_lookup.upc
+        WHERE fact_transactions.execution_date = '{{ macros.ds_add(ds, -1) }}'
     ''',
     dag=dag,
 )
