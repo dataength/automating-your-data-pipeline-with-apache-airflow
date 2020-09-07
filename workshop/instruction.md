@@ -2,6 +2,7 @@
 
 1. [Build Your First DAG](#build-your-first-dag)
 1. [Airflow CLI](#airflow-cli)
+1. [Getting Familiar with Hive](#getting-familiar-with-hive)
 1. [Let's Build a Data Pipeline](#lets-build-a-data-pipeline)
     * [Product Lookup Pipeline](#product-lookup-pipeline)
     * [Store Lookup Pipeline](#store-lookup-pipeline)
@@ -122,6 +123,103 @@ airflow list_tasks tutorial --tree
 
 # testing templated
 airflow test tutorial templated 2015-06-01
+```
+
+## Getting Familiar with Hive
+
+### Create table with partition
+
+```sql
+CREATE TABLE IF NOT EXISTS customer_transactions (
+  customer_id VARCHAR(40),
+  txn_amount DECIMAL(38, 2),
+  txn_type  VARCHAR(100)
+)
+PARTITIONED BY (txn_date STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+```
+
+### Insert new row into table
+
+```
+set hive.exec.dynamic.partition.mode=nonstrict;
+```
+
+```sql
+INSERT INTO customer_transactions PARTITION(txn_date) VALUES('123', 1860, 'Credit', '2019-04-14');
+```
+
+Insert another new row
+
+```sql
+INSERT INTO customer_transactions PARTITION(txn_date) VALUES('121', 588, 'Debit', '2019-04-14');
+```
+
+### Show partitions
+
+```sql
+SHOW PARTITIONS customer_transactions;
+```
+
+### Load data into table
+
+2019-11-15.txt
+```
+120|2500|Credit
+121|1050.50|Credit
+122|100|Debit
+122|500|Credit
+123|100|Debit
+```
+
+Appending
+
+```sql
+LOAD DATA INPATH '/2019-11-15.txt' INTO TABLE customer_transactions PARTITION(txn_date='2019-11-15');
+```
+
+Overwriting
+
+```sql
+LOAD DATA INPATH '/2019-11-15.txt' OVERWRITE INTO TABLE customer_transactions PARTITION(txn_date='2019-11-15');
+```
+
+### Query data
+
+```sql
+SELECT * FROM customer_transactions;
+```
+
+```sql
+SELECT * FROM customer_transactions WHERE txn_date = '2019-11-15';
+```
+
+### Query then insert
+
+```sql
+CREATE TABLE IF NOT EXISTS amount_summary (
+ txn_type     VARCHAR(100),
+ total_amount DECIMAL(38, 2)
+)
+PARTITIONED BY (txn_date DATE)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+```
+
+```sql
+INSERT INTO TABLE amount_summary
+SELECT txn_type, avg(txn_amout) from customer_transactions GROUP BY txn_type;
+```
+
+```sql
+INSERT OVERWRITE TABLE amount_summary
+SELECT txn_type, avg(txn_amout) from customer_transactions GROUP BY txn_type;
+```
+
+```sql
+INSERT OVERWRITE TABLE amount_summary PARTITION (txn_date)
+SELECT txn_type, avg(txn_amout), '2020-08-12' from customer_transactions GROUP BY txn_type;
 ```
 
 ## Let's Build a Data Pipeline
