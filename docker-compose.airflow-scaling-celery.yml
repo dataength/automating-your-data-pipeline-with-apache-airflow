@@ -56,7 +56,7 @@ services:
     restart: always
     container_name: airflow-scheduler
     depends_on:
-      - postgres
+      - airflow-metastore
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
@@ -72,7 +72,7 @@ services:
     image: dataength/airflow:skooldio
     restart: always
     depends_on:
-      - postgres
+      - airflow-metastore
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
