@@ -430,7 +430,7 @@ start = DummyOperator(
 
 is_file_available = FileSensor(
     task_id='is_file_available',
-    fs_conn_id='my_file_path',
+    fs_conn_id='my_file_conn',
     filepath='store-lookup-table.csv',
     poke_interval=5,
     timeout=100,
