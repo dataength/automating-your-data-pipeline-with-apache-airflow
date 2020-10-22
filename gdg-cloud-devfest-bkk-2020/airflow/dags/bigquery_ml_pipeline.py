@@ -21,7 +21,7 @@ with DAG('bigquery_ml_pipeline',
     train_model = BigQueryOperator(
         task_id='train_model',
         sql='''
-            CREATE OR REPLACE MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model`
+            CREATE OR REPLACE MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_{{ ds }}`
             OPTIONS(model_type='logistic_reg') AS
             SELECT
                 IF(totals.transactions IS NULL, 0, 1) AS label,
@@ -46,11 +46,11 @@ with DAG('bigquery_ml_pipeline',
         task_id='get_model_training_statistics',
         sql='''
             CREATE OR REPLACE TABLE
-                `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_training_statistics` AS
+                `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_training_statistics_{{ ds }}` AS
             SELECT
                 *
             FROM
-                ML.TRAINING_INFO(MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model`)
+                ML.TRAINING_INFO(MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_{{ ds }}`)
             ORDER BY
                 iteration DESC
         ''',
@@ -64,10 +64,10 @@ with DAG('bigquery_ml_pipeline',
         task_id='evaluate_model',
         sql='''
             CREATE OR REPLACE TABLE
-                `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_evaluation` AS
+                `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_evaluation_{{ ds }}` AS
             SELECT
                 *
-            FROM ML.EVALUATE(MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model`, (
+            FROM ML.EVALUATE(MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_{{ ds }}`, (
                 SELECT
                     IF(totals.transactions IS NULL, 0, 1) AS label,
                     IFNULL(device.operatingSystem, "") AS os,
@@ -89,11 +89,11 @@ with DAG('bigquery_ml_pipeline',
         task_id='compute_roc',
         sql='''
             CREATE OR REPLACE TABLE
-                `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_roc` AS
+                `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_roc_{{ ds }}` AS
             SELECT
                 *
             FROM
-                ML.ROC_CURVE(MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model`)
+                ML.ROC_CURVE(MODEL `gdg_cloud_devfest_bkk_2020.purchase_prediction_model_{{ ds }}`)
         ''',
         allow_large_results=True,
         use_legacy_sql=False,
