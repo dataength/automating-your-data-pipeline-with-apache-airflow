@@ -8,10 +8,12 @@ args = {
     'owner': 'zkan',
     'start_date': days_ago(1),
 }
-with DAG('bigquery_ml_pipeline',
-         schedule_interval='0 0 * * 1',
-         default_args=args,
-         catchup=False) as dag:
+with DAG(
+    'bigquery_ml_pipeline',
+    schedule_interval='0 */2 * * *',
+    default_args=args,
+    catchup=False
+) as dag:
 
     start = DummyOperator(
         task_id='start',
