@@ -10,7 +10,7 @@ args = {
 }
 with DAG(
     'bigquery_ml_pipeline',
-    schedule_interval='0 */2 * * *',
+    schedule_interval='0 0 * * 1',
     default_args=args,
     catchup=False
 ) as dag:
