@@ -9,8 +9,8 @@ from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.hive_operator import HiveOperator
 from airflow.operators.python_operator import PythonOperator
-from airflow.operators.email_operator import EmailOperator
-from airflow.operators.slack_operator import SlackAPIPostOperator
+# from airflow.operators.email_operator import EmailOperator
+# from airflow.operators.slack_operator import SlackAPIPostOperator
 from airflow.sensors.http_sensor import HttpSensor
 
 import requests
@@ -113,26 +113,26 @@ with DAG(dag_id="forex_data_pipeline_final", schedule_interval="@daily", default
 
     # Sending a notification by email
     # https://stackoverflow.com/questions/51829200/how-to-set-up-airflow-send-email
-    sending_email_notification = EmailOperator(
-            task_id="sending_email",
-            to="airflow_course@yopmail.com",
-            subject="forex_data_pipeline",
-            html_content="""
-                <h3>forex_data_pipeline succeeded</h3>
-            """
-            )
+    # sending_email_notification = EmailOperator(
+    #         task_id="sending_email",
+    #         to="airflow_course@yopmail.com",
+    #         subject="forex_data_pipeline",
+    #         html_content="""
+    #             <h3>forex_data_pipeline succeeded</h3>
+    #         """
+    #         )
 
     # Sending a notification by Slack message
     # TODO: Improvements - add on_failure for tasks
     # https://medium.com/datareply/integrating-slack-alerts-in-airflow-c9dcd155105
-    sending_slack_notification = SlackAPIPostOperator(
-        task_id="sending_slack",
-        token="xoxp-753801195270-740121926339-751642514144-8391b800988bed43247926b03742459e",
-        username="airflow",
-        text="DAG forex_data_pipeline: DONE",
-        channel="#airflow-exploit"
-    )
+    # sending_slack_notification = SlackAPIPostOperator(
+    #     task_id="sending_slack",
+    #     token="xoxp-753801195270-740121926339-751642514144-8391b800988bed43247926b03742459e",
+    #     username="airflow",
+    #     text="DAG forex_data_pipeline: DONE",
+    #     channel="#airflow-exploit"
+    # )
 
     is_forex_rates_available >> is_forex_currencies_file_available >> downloading_rates >> saving_rates
-    saving_rates >> creating_forex_rates_table >> forex_processing 
-    forex_processing >> sending_email_notification >> sending_slack_notification
+    saving_rates >> creating_forex_rates_table >> forex_processing
+    # forex_processing >> sending_email_notification >> sending_slack_notification
