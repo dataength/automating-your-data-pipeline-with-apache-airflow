@@ -292,10 +292,10 @@ services:
     restart: always
     container_name: airflow-scheduler
     depends_on:
-      - postgres
+      - airflow-metastore
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
       - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
       - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
     volumes:
@@ -308,10 +308,10 @@ services:
     image: dataength/airflow:skooldio
     restart: always
     depends_on:
-      - postgres
+      - airflow-metastore
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
       - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
       - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
     volumes:
@@ -328,7 +328,7 @@ services:
       - redis
     environment:
       - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@postgres:5432/airflow_db
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
       - AIRFLOW__CELERY__BROKER_URL=redis://redis:6379/1
       - AIRFLOW__CELERY__RESULT_BACKEND=redis://redis:6379/1
     ports:
