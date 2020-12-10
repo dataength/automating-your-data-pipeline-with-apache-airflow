@@ -83,15 +83,14 @@ create_product_lookup_table = HiveOperator(
     hive_cli_conn_id='my_hive_conn',
     hql='''
         CREATE TABLE IF NOT EXISTS dim_product_lookup (
-            UPC          STRING, 
-            DESCRIPTION  STRING, 
-            MANUFACTURER STRING, 
-            CATEGORY     STRING, 
-            SUB_CATEGORY STRING, 
-            PRODUCT_SIZE STRING
+            upc           VARCHAR(100),
+            description   VARCHAR(300),
+            manufacturer  VARCHAR(100),
+            category      VARCHAR(100),
+            sub_category  VARCHAR(100),
+            product_size  DECIMAL(38, 2)
         )
-        ROW FORMAT DELIMITED
-        FIELDS TERMINATED BY ','
+        ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
         STORED AS TEXTFILE
     ''',
     dag=dag,
