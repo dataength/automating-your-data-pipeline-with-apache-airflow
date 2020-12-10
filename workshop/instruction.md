@@ -602,7 +602,7 @@ end = DummyOperator(
 start >> end
 ```
 
-Here we want to simulate a scenario in which we are trying to extract the data from a data source by querying by week end date. In this workshop, since we don't have an actual database or some kind of system, we'll then use a dataset file `transaction-data-table` as a data source.
+Here we want to simulate a scenario in which we are trying to extract the data from a data source by querying by week end date and put it in the data lake (HDFS). In this workshop, since we don't have an actual database or some kind of system, we'll then use a dataset file `transaction-data-table` as a data source.
 
 Let's query transaction data by week end date.
 
@@ -614,6 +614,8 @@ import pandas as pd
 
 
 DATA_FOLDER = '/usr/local/airflow/dags/files'
+LANDING_ZONE = '/landing'
+CLEANED_ZONE = '/cleaned'
 
 def query_data_by_week_end_date_func(ds):
     week_end_date = macros.ds_format(ds, '%Y-%m-%d', '%d-%b-%y')
@@ -629,6 +631,12 @@ query_data_by_week_end_date = PythonOperator(
     op_args=['{{ macros.ds_add(ds, -1) }}'],
     dag=dag,
 )
+
+upload_to_landing_zone = BashOperator(
+    task_id='upload_to_landing_zone',
+    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-{{{{ macros.ds_add(ds, -1) }}}}-original.csv {LANDING_ZONE}/transaction-{{{{ macros.ds_add(ds, -1) }}}}-original.csv',
+    dag=dag,
+)
 ```
 
 As seen above, we use Airflow Macros and use template to deal with the date stamp. This is very powerful feature of Airflow that allows us to create a dynamic data pipeline.
@@ -636,7 +644,7 @@ As seen above, we use Airflow Macros and use template to deal with the date stam
 We then add this task to our pipeline, so it will look like this.
 
 ```py
-start >> query_data_by_week_end_date >> end
+start >> query_data_by_week_end_date >> upload_to_landing_zone >> end
 ```
 
 We could test this task with the Airflow CLI below.
@@ -647,13 +655,38 @@ airflow test transaction_load_pipeline query_data_by_week_end_date 2009-01-15
 
 After run the command above, we should see a new file named `transaction-2009-01-15.csv` under the folder `dags/files`. This file should contain the transaction data on Jan 14, 2009.
 
+After that we will download the data onto our local machine then check if the file is available for further processing yet or not.
+
+```py
+download_data_to_local = BashOperator(
+    task_id='download_data_to_local',
+    bash_command=f'hdfs dfs -get -f {LANDING_ZONE}/transaction-{{{{ macros.ds_add(ds, -1) }}}}-original.csv {DATA_FOLDER}/transaction-{{{{ macros.ds_add(ds, -1) }}}}.csv',
+    dag=dag,
+)
+
+is_file_available = FileSensor(
+    task_id='is_file_available',
+    fs_conn_id='my_file_conn',
+    filepath='transaction-{{ macros.ds_add(ds, -1) }}.csv',
+    poke_interval=5,
+    timeout=100,
+    dag=dag,
+)
+```
+
+The DAG will look like this:
+
+```py
+start >> query_data_by_week_end_date >> upload_to_landing_zone >> download_data_to_local >> is_file_available >> end
+```
+
 Let's continue by removing the empty columns.
 
 ```py
 import logging
 
 
-def remove_empty_columns_func(ds):
+def _remove_empty_columns(ds):
     df = pd.read_csv(f'{DATA_FOLDER}/transaction-{ds}.csv')
     logging.info(df.head())
     df[
@@ -675,7 +708,7 @@ def remove_empty_columns_func(ds):
 
 
 remove_empty_columns = PythonOperator(
-    task_id='remove_empty_columns',
+    task_id='_remove_empty_columns',
     python_callable=remove_empty_columns_func,
     op_args=['{{ macros.ds_add(ds, -1) }}'],
     dag=dag,
@@ -688,8 +721,8 @@ Upload the file to HDFS.
 from airflow.operators.bash_operator import BashOperator
 
 
-upload_to_hdfs = BashOperator(
-    task_id='upload_to_hdfs',
+upload_to_cleaned_zone = BashOperator(
+    task_id='upload_to_cleaned_zone',
     bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv /transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv',
     dag=dag,
 )
@@ -733,8 +766,8 @@ Load data in the Hive table with partition.
 load_data_to_hive_table = HiveOperator(
     task_id='load_data_to_hive_table',
     hive_cli_conn_id='my_hive_conn',
-    hql='''
-        LOAD DATA INPATH '/transaction-cleaned-{{ macros.ds_add(ds, -1) }}.csv' OVERWRITE INTO TABLE fact_transactions PARTITION(execution_date=date'{{ macros.ds_add(ds, -1) }}');
+    hql=f'''
+        LOAD DATA INPATH '{CLEANED_ZONE}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv' OVERWRITE INTO TABLE fact_transactions PARTITION (execution_date=date'{{{{ macros.ds_add(ds, -1) }}}}');
     ''',
     dag=dag,
 )
@@ -743,7 +776,7 @@ load_data_to_hive_table = HiveOperator(
 The final DAG will look like:
 
 ```py
-start >> query_data_by_week_end_date >> remove_empty_columns >> upload_to_hdfs >> create_transations_table >> load_data_to_hive_table >> end
+start >> query_data_by_week_end_date >> upload_to_landing_zone >> download_data_to_local >> is_file_available >> remove_empty_columns >> upload_to_cleaned_zone >> create_transations_table >> load_data_to_hive_table >> end
 ```
 
 Backfill will play an important role here. We can use it to get the data stored in the past and continue getting the data in the future without modifying our DAG. Let's try the command below.

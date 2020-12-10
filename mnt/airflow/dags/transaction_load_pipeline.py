@@ -76,7 +76,7 @@ is_file_available = FileSensor(
 )
 
 
-def remove_empty_columns_func(ds):
+def _remove_empty_columns(ds):
     df = pd.read_csv(f'{DATA_FOLDER}/transaction-{ds}.csv')
     logging.info(df.head())
     df[
@@ -99,7 +99,7 @@ def remove_empty_columns_func(ds):
 
 remove_empty_columns = PythonOperator(
     task_id='remove_empty_columns',
-    python_callable=remove_empty_columns_func,
+    python_callable=_remove_empty_columns,
     op_args=['{{ macros.ds_add(ds, -1) }}'],
     dag=dag,
 )
