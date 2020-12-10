@@ -281,7 +281,31 @@ end = DummyOperator(
 start >> end
 ```
 
-Check if the file is available yet or not.
+We expect that the product dataset is already stored in the HDFS, so we are going to download it onto our local machine.
+
+```py
+from airflow.operators.bash_operator import BashOperator
+
+
+DATA_FOLDER = '/usr/local/airflow/dags/files'
+LANDING_ZONE = '/landing'
+CLEANED_ZONE = '/cleaned'
+
+# Download data from HDFS
+download_data_to_local = BashOperator(
+    task_id='download_data_to_local',
+    bash_command=f'hdfs dfs -get -f {LANDING_ZONE}/product-lookup-table-original.csv {DATA_FOLDER}/product-lookup-table.csv',
+    dag=dag,
+)
+```
+
+Add this task to the DAG:
+
+```
+start >> download_data_to_local >> end
+```
+
+Next we check if the file is available for further processing yet or not.
 
 ```py
 from airflow.contrib.sensors.file_sensor import FileSensor
@@ -300,7 +324,7 @@ is_file_available = FileSensor(
 Add this task to the existing DAG, so it'll look like this.
 
 ```
-start >> is_file_available >> end
+start >> download_data_to_local >> is_file_available >> end
 ```
 
 Remove empty columns and create a new file.
@@ -315,7 +339,7 @@ import pandas as pd
 
 DATA_FOLDER = '/usr/local/airflow/dags/files'
 
-def remove_empty_columns_func():
+def _remove_empty_columns():
     df = pd.read_csv(f'{DATA_FOLDER}/product-lookup-table.csv', header=1)
     logging.info(df.head())
     df[[
@@ -330,7 +354,7 @@ def remove_empty_columns_func():
 
 remove_empty_columns = PythonOperator(
     task_id='remove_empty_columns',
-    python_callable=remove_empty_columns_func,
+    python_callable=_remove_empty_columns,
     dag=dag,
 )
 ```
@@ -338,17 +362,14 @@ remove_empty_columns = PythonOperator(
 The DAG will be:
 
 ```
-start >> is_file_available >> remove_empty_columns >> end
+start >> download_data_to_local >> is_file_available >> remove_empty_columns >> end
 ```
 
-Upload file to HDFS
+Upload the processed file to HDFS.
 ```sh
-from airflow.operators.bash_operator import BashOperator
-
-
-upload_to_hdfs = BashOperator(
-    task_id='upload_to_hdfs',
-    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/products-with-good-columns.csv /products-with-good-columns.csv',
+upload_to_cleaned_zone = BashOperator(
+    task_id='upload_to_cleaned_zone',
+    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/products-with-good-columns.csv {CLEANED_ZONE}/products-with-good-columns.csv',
     dag=dag,
 )
 ```
@@ -356,7 +377,7 @@ upload_to_hdfs = BashOperator(
 The DAG will be:
 
 ```
-start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> end
+start >> download_data_to_local >> is_file_available >> remove_empty_columns >> upload_to_cleaned_zone >> end
 ```
 
 Create a Hive table.
@@ -387,7 +408,7 @@ create_product_lookup_table = HiveOperator(
 The DAG will be:
 
 ```
-start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> create_product_lookup_table >> end
+start >> download_data_to_local >> is_file_available >> remove_empty_columns >> upload_to_cleaned_zone >> create_product_lookup_table >> end
 ```
 
 Finally, we load data to Hive table.
@@ -406,7 +427,7 @@ load_data_to_hive_table = HiveOperator(
 The DAG will be:
 
 ```
-start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> create_product_lookup_table >> load_data_to_hive_table >> end
+start >> download_data_to_local >> is_file_available >> remove_empty_columns >> upload_to_cleaned_zone >> create_product_lookup_table >> load_data_to_hive_table >> end
 ```
 
 🎉
