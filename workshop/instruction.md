@@ -125,6 +125,26 @@ airflow list_tasks tutorial --tree
 airflow test tutorial templated 2015-06-01
 ```
 
+## Getting Familiar with HDFS
+
+### Listing the directory on HDFS
+
+```sh
+hdfs dfs -ls /
+```
+
+### Uploading a file to HDFS
+
+```sh
+hdfs dfs -put data.txt /
+```
+
+### Getting the basic file system information and statistics about the HDFS
+
+```sh
+hdfs dfsadmin -report
+```
+
 ## Getting Familiar with Hive
 
 ### Create table with partition
