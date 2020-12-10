@@ -2,6 +2,7 @@
 
 1. [Build Your First DAG](#build-your-first-dag)
 1. [Airflow CLI](#airflow-cli)
+1. [Playing Around with HDFS](#playing-around-with-hdfs)
 1. [Getting Familiar with Hive](#getting-familiar-with-hive)
 1. [Let's Build a Data Pipeline](#lets-build-a-data-pipeline)
     * [Product Lookup Pipeline](#product-lookup-pipeline)
@@ -125,7 +126,7 @@ airflow list_tasks tutorial --tree
 airflow test tutorial templated 2015-06-01
 ```
 
-## Getting Familiar with HDFS
+## Playing Around with HDFS
 
 ### Listing the directory on HDFS
 
