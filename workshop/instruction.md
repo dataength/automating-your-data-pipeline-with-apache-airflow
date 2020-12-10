@@ -161,7 +161,7 @@ ROW FORMAT DELIMITED FIELDS TERMINATED BY '|' LINES TERMINATED BY '\n'
 STORED AS TEXTFILE;
 ```
 
-### Insert new row into table
+### Insert new row with partition into table
 
 ```
 set hive.exec.dynamic.partition.mode=nonstrict;
@@ -171,7 +171,7 @@ set hive.exec.dynamic.partition.mode=nonstrict;
 INSERT INTO customer_transactions PARTITION(txn_date) VALUES('123', 1860, 'Credit', '2019-04-14');
 ```
 
-Insert another new row
+Insert another new row with partition
 
 ```sql
 INSERT INTO customer_transactions PARTITION(txn_date) VALUES('121', 588, 'Debit', '2019-04-14');
@@ -216,7 +216,7 @@ SELECT * FROM customer_transactions;
 SELECT * FROM customer_transactions WHERE txn_date = '2019-11-15';
 ```
 
-### Query then insert
+### Query then insert with partition
 
 ```sql
 CREATE TABLE IF NOT EXISTS amount_summary (
