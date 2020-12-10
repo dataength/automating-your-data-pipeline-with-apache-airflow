@@ -12,6 +12,10 @@ from airflow.utils import timezone
 import pandas as pd
 
 
+DATA_FOLDER = '/usr/local/airflow/dags/files'
+LANDING_ZONE = '/landing'
+CLEANED_ZONE = '/cleaned'
+
 default_args = {
     'owner': 'zkan',
     'email': ['zkan@hey.com'],
@@ -30,6 +34,14 @@ start = DummyOperator(
     dag=dag,
 )
 
+# Download data from HDFS
+download_data_to_local = BashOperator(
+    task_id='download_data_to_local',
+    bash_command=f'hdfs dfs -get -f {LANDING_ZONE}/store-lookup-table-original.csv {DATA_FOLDER}/store-lookup-table.csv',
+    dag=dag,
+)
+
+# Check if file is available for further processing
 is_file_available = FileSensor(
     task_id='is_file_available',
     fs_conn_id='my_file_conn',
@@ -39,9 +51,7 @@ is_file_available = FileSensor(
     dag=dag,
 )
 
-DATA_FOLDER = '/usr/local/airflow/dags/files'
-
-def remove_empty_columns_func():
+def _remove_empty_columns():
     df = pd.read_csv(f'{DATA_FOLDER}/store-lookup-table.csv', header=1)
     logging.info(df.head())
     df[
@@ -56,20 +66,20 @@ def remove_empty_columns_func():
             'SALES_AREA_SIZE_NUM', 
             'AVG_WEEKLY_BASKETS'
         ]
-    ].to_csv(f'{DATA_FOLDER}/store-with-good-columns.csv', index=False, header=False)
+    ].to_csv(f'{DATA_FOLDER}/stores-with-good-columns.csv', index=False, header=False)
 
 
 remove_empty_columns = PythonOperator(
     task_id='remove_empty_columns',
-    python_callable=remove_empty_columns_func,
+    python_callable=_remove_empty_columns,
     # sla=timedelta(seconds=3),
     dag=dag,
 )
 
-# Upload to HDFS
-upload_to_hdfs = BashOperator(
-    task_id='upload_to_hdfs',
-    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/store-with-good-columns.csv /store-with-good-columns.csv',
+# Upload processed data to cleaned zone
+upload_to_cleaned_zone = BashOperator(
+    task_id='upload_to_cleaned_zone',
+    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/stores-with-good-columns.csv {CLEANED_ZONE}/stores-with-good-columns.csv',
     dag=dag,
 )
 
@@ -99,8 +109,8 @@ create_store_lookup_table = HiveOperator(
 load_data_to_hive_table = HiveOperator(
     task_id='load_data_to_hive_table',
     hive_cli_conn_id='my_hive_conn',
-    hql='''
-        LOAD DATA INPATH '/store-with-good-columns.csv' OVERWRITE INTO TABLE dim_store_lookup;
+    hql=f'''
+        LOAD DATA INPATH '{CLEANED_ZONE}/stores-with-good-columns.csv' OVERWRITE INTO TABLE dim_store_lookup;
     ''',
     dag=dag,
 )
@@ -111,4 +121,6 @@ end = DummyOperator(
 )
 
 # Define DAG dependencies
-start >> is_file_available >> remove_empty_columns >> upload_to_hdfs >> create_store_lookup_table >> load_data_to_hive_table >> end
+start >> download_data_to_local >> is_file_available >> remove_empty_columns >> \
+    upload_to_cleaned_zone >> create_store_lookup_table >> \
+    load_data_to_hive_table >> end

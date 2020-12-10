@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 from airflow import DAG, macros
+from airflow.contrib.sensors.file_sensor import FileSensor
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.hive_operator import HiveOperator
@@ -10,6 +11,10 @@ from airflow.utils import timezone
 
 import pandas as pd
 
+
+DATA_FOLDER = '/usr/local/airflow/dags/files'
+LANDING_ZONE = '/landing'
+CLEANED_ZONE = '/cleaned'
 
 default_args = {
     'owner': 'zkan',
@@ -29,25 +34,48 @@ start = DummyOperator(
     dag=dag,
 )
 
-DATA_FOLDER = '/usr/local/airflow/dags/files'
 
-def query_data_by_week_end_date_func(ds):
+def _query_data_by_week_end_date(ds):
     week_end_date = macros.ds_format(ds, '%Y-%m-%d', '%d-%b-%y')
 
-    df = pd.read_csv(f'{DATA_FOLDER}/transaction-data-table.csv', header=1)
+    df = pd.read_csv(f'{DATA_FOLDER}/transaction-data-table-original.csv', header=1)
     new_df = df[df.WEEK_END_DATE == week_end_date]
-    new_df.to_csv(f'{DATA_FOLDER}/transaction-{ds}.csv', index=False, header=True)
-    
+    new_df.to_csv(f'{DATA_FOLDER}/transaction-{ds}-original.csv', index=False, header=True)
+
 
 # Query data by week end date
 query_data_by_week_end_date = PythonOperator(
     task_id='query_data_by_week_end_date',
-    python_callable=query_data_by_week_end_date_func,
+    python_callable=_query_data_by_week_end_date,
     op_args=['{{ macros.ds_add(ds, -1) }}'],
     dag=dag,
 )
 
-# Remove empty columns
+# Upload raw data to landing zone
+upload_to_landing_zone = BashOperator(
+    task_id='upload_to_landing_zone',
+    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-{{{{ macros.ds_add(ds, -1) }}}}-original.csv {LANDING_ZONE}/transaction-{{{{ macros.ds_add(ds, -1) }}}}-original.csv',
+    dag=dag,
+)
+
+# Download data from HDFS
+download_data_to_local = BashOperator(
+    task_id='download_data_to_local',
+    bash_command=f'hdfs dfs -get -f {LANDING_ZONE}/transaction-{{{{ macros.ds_add(ds, -1) }}}}-original.csv {DATA_FOLDER}/transaction-{{{{ macros.ds_add(ds, -1) }}}}.csv',
+    dag=dag,
+)
+
+# Check if file is available for further processing
+is_file_available = FileSensor(
+    task_id='is_file_available',
+    fs_conn_id='my_file_conn',
+    filepath='transaction-{{ macros.ds_add(ds, -1) }}.csv',
+    poke_interval=5,
+    timeout=100,
+    dag=dag,
+)
+
+
 def remove_empty_columns_func(ds):
     df = pd.read_csv(f'{DATA_FOLDER}/transaction-{ds}.csv')
     logging.info(df.head())
@@ -76,10 +104,10 @@ remove_empty_columns = PythonOperator(
     dag=dag,
 )
 
-# Upload to HDFS
-upload_to_hdfs = BashOperator(
-    task_id='upload_to_hdfs',
-    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv /transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv',
+# Upload processed data to cleaned zone
+upload_to_cleaned_zone = BashOperator(
+    task_id='upload_to_cleaned_zone',
+    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv {CLEANED_ZONE}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv',
     dag=dag,
 )
 
@@ -113,8 +141,8 @@ create_transations_table = HiveOperator(
 load_data_to_hive_table = HiveOperator(
     task_id='load_data_to_hive_table',
     hive_cli_conn_id='my_hive_conn',
-    hql='''
-        LOAD DATA INPATH '/transaction-cleaned-{{ macros.ds_add(ds, -1) }}.csv' OVERWRITE INTO TABLE fact_transactions PARTITION (execution_date=date'{{ macros.ds_add(ds, -1) }}');
+    hql=f'''
+        LOAD DATA INPATH '{CLEANED_ZONE}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv' OVERWRITE INTO TABLE fact_transactions PARTITION (execution_date=date'{{{{ macros.ds_add(ds, -1) }}}}');
     ''',
     dag=dag,
 )
@@ -125,4 +153,6 @@ end = DummyOperator(
 )
 
 # Define DAG dependencies
-start >> query_data_by_week_end_date >> remove_empty_columns >> upload_to_hdfs >> create_transations_table >> load_data_to_hive_table >> end
+start >> query_data_by_week_end_date >> upload_to_landing_zone >> \
+    download_data_to_local >> is_file_available >> remove_empty_columns >> upload_to_cleaned_zone >> \
+    create_transations_table >> load_data_to_hive_table >> end

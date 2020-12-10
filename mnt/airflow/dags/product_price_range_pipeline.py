@@ -79,4 +79,5 @@ end = DummyOperator(
 )
 
 # Define DAG dependencies
-start >> check_named_partition >> create_product_transactions_table >> add_new_product_transactions >> end
+start >> check_named_partition >> create_product_transactions_table >> \
+    add_new_product_transactions >> end
