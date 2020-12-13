@@ -723,7 +723,7 @@ from airflow.operators.bash_operator import BashOperator
 
 upload_to_cleaned_zone = BashOperator(
     task_id='upload_to_cleaned_zone',
-    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv /transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv',
+    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv {CLEANED_ZONE}/transaction-cleaned-{{{{ macros.ds_add(ds, -1) }}}}.csv',
     dag=dag,
 )
 ```
