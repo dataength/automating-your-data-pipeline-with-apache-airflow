@@ -782,13 +782,13 @@ start >> query_data_by_week_end_date >> upload_to_landing_zone >> download_data_
 Backfill will play an important role here. We can use it to get the data stored in the past and continue getting the data in the future without modifying our DAG. Let's try the command below.
 
 ```sh
-airflow backfill -s 2009-01-10 -e 2009-01-16 --reset_dagruns transaction_load_pipeline
+airflow dags backfill -s 2009-01-10 -e 2009-01-16 --reset-dagruns transaction_load_pipeline
 ```
 
-In case of having many workers, use `--donot_pickle` to not attempt to pickle the DAG object to send over to the workers. The workers will run their version of the code. This way we don't need to deal with the DAG serialization issue that may happen.
+In case of having many workers, use `--donot-pickle` to not attempt to pickle the DAG object to send over to the workers. The workers will run their version of the code. This way we don't need to deal with the DAG serialization issue that may happen.
 
 ```sh
-airflow backfill -s 2009-01-10 -e 2009-01-16 --donot_pickle --reset_dagruns transaction_load_pipeline
+airflow dags backfill -s 2009-01-10 -e 2009-01-16 --donot-pickle --reset-dagruns transaction_load_pipeline
 ```
 
 🎉
@@ -899,7 +899,7 @@ start >> check_named_partition >> create_product_transactions_table >> add_new_p
 Let's test it with the backfill command:
 
 ```sh
-airflow backfill -s 2009-01-10 -e 2009-01-16 --reset_dagruns product_price_range_pipeline
+airflow dags backfill -s 2009-01-10 -e 2009-01-16 --reset-dagruns product_price_range_pipeline
 ```
 
 That's it! To answer the question "What is the range of prices offered on products?", we can group the data by the product description and find min and max prices to get the range of prices of each product.
