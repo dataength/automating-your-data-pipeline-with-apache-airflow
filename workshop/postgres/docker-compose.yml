@@ -5,11 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: breakfast_at_the_frat_db
+    image: breakfast
+    volumes:
+      - .:/mnt
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=breakfast_at_the_frat
+      - POSTGRES_DB=breakfast
       - POSTGRES_PORT=5432
     ports:
       - "5432:5432"
