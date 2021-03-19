@@ -61,8 +61,4 @@
         <name>dfs.datanode.use.datanode.hostname</name>
         <value>true</value>
     </property>
-    <property>
-        <name>ipc.maximum.data.length</name>
-        <value>134217728</value>
-    </property>
 </configuration>
