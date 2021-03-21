@@ -3,30 +3,34 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.utils import timezone
+from airflow.utils.dates import timezone
+
+
+def _sleep():
+    time.sleep(5)
+
 
 default_args = {
-    'owner': 'zkan',
+    'owner': 'dataength',
+    'start_date': timezone.datetime(2021, 3, 1),
+    'email': ['kan@odds.team'],
+    'sla': timedelta(seconds=10),
 }
+with DAG('test_sla',
+         default_args=default_args,
+         description='A simple pipeline to S3 hook',
+         schedule_interval='*/5 * * * *',
+         catchup=False) as dag:
 
-dag = DAG(
-    'test_sla',
-    schedule_interval='*/5 * * * *',
-    default_args=default_args,
-    start_date=timezone.datetime(2020, 8, 1),
-    catchup=False,
-)
+    first_check = PythonOperator(
+        task_id='first_check',
+        python_callable=_sleep,
+        sla=timedelta(seconds=3),
+    )
 
+    second_check = PythonOperator(
+        task_id='second_check',
+        python_callable=_sleep,
+    )
 
-def hello():
-    time.sleep(5)
-    return 'Hello'
-
-t1 = PythonOperator(
-    task_id='my_1st_dummy_task',
-    python_callable=hello,
-    sla=timedelta(seconds=3),
-    dag=dag,
-)
-
-t1
+    first_check >> second_check
