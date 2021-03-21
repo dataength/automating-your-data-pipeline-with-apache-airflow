@@ -2,10 +2,24 @@ version: '3.8'
 services:
 
 ######################################################
+# DATASET
+######################################################
+  dataset:
+    build: ./docker/dataset
+    image: dataength/dataset:skooldio
+    restart: always
+    container_name: dataset
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=breakfast
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+######################################################
 # DATABASE SERVICE
 ######################################################
   postgres:
-    build: './docker/postgres'
+    build: ./docker/postgres
     image: dataength/postgres:skooldio
     restart: always
     container_name: postgres
