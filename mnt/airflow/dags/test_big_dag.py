@@ -6,7 +6,7 @@ from airflow.utils.dates import days_ago
 
 
 default_args = {
-    'owenr': 'zkan',
+    'owner': 'zkan',
     'email': ['kan@odds.team',],
 }
 with DAG('test_big_dag',
