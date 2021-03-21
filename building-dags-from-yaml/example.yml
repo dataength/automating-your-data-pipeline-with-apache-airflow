@@ -1,0 +1,18 @@
+name: my_dag
+dag_args:
+  schedule_interval: '@daily'
+default_task_args:
+  owner: zkan
+  retries: 2
+  start_date: '2021-03-25'
+operators:
+  - name: my_first_job
+    type: python
+    properties:
+      python_callable: first
+  - name: my_second_job
+    type: bash
+    properties:
+      bash_command: 'echo "Hello"'
+    upstream_dependencies:
+      - my_first_job
