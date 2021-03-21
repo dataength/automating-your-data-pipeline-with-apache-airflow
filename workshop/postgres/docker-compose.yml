@@ -6,8 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile
     image: breakfast
-    volumes:
-      - .:/mnt
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
