@@ -7,7 +7,7 @@ from airflow.utils.dates import timezone
 
 
 def _sleep():
-    time.sleep(5)
+    time.sleep(3)
 
 
 default_args = {
@@ -25,7 +25,7 @@ with DAG('test_sla',
     first_check = PythonOperator(
         task_id='first_check',
         python_callable=_sleep,
-        sla=timedelta(seconds=3),
+        sla=timedelta(seconds=2),
     )
 
     second_check = PythonOperator(
