@@ -1,12 +1,12 @@
 # Workshop Instruction
 
-1. [Build Your First DAG](#build-your-first-dag)
-1. [Airflow CLI](#airflow-cli)
-1. [Playing Around with HDFS](#playing-around-with-hdfs)
-1. [Getting Familiar with Hive](#getting-familiar-with-hive)
-1. [Let's Build a Data Pipeline](#lets-build-a-data-pipeline)
-    * [Product Lookup Pipeline](#product-lookup-pipeline)
-    * [Store Lookup Pipeline](#store-lookup-pipeline)
-    * [Transaction Load Pipeline](#transaction-load-pipeline)
-    * [Product Price Range Pipeline](#product-price-range-pipeline)
-1. [Scaling Airflow](#scaling-airflow)
+1. [Build Your First DAG](01-build-your-first-dag.md)
+1. [Airflow CLI](02-airflow-cli.md)
+1. [Playing Around with HDFS](03-playing-around-with-hdfs.md)
+1. [Getting Familiar with Hive](04-getting-familiar-with-hive.md)
+1. [Let's Build a Data Pipeline](05-lets-build-a-data-pipeline.md)
+    * Product Lookup Pipeline
+    * Store Lookup Pipeline
+    * Transaction Load Pipeline
+    * Product Price Range Pipeline
+1. [Scaling Airflow](06-scaling-airflow.md)

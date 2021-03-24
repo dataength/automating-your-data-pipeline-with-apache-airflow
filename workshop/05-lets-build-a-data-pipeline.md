@@ -1,3 +1,8 @@
+* [Product Lookup Pipeline](#product-lookup-pipeline)
+* [Store Lookup Pipeline](#store-lookup-pipeline)
+* [Transaction Load Pipeline](#transaction-load-pipeline)
+* [Product Price Range Pipeline](#product-price-range-pipeline)
+
 ## Let's Build a Data Pipeline
 
 What is the range of prices offered on products?
