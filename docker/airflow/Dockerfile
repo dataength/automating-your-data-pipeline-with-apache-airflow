@@ -43,6 +43,7 @@ COPY ./requirements-python3.7.txt /requirements-python3.7.txt
 RUN pip install --upgrade "pip==20.2.4" && \
     useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow && \
     pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh,docker,hdfs,redis,slack,webhdfs]==${AIRFLOW_VERSION} jupyter papermill great_expectations --constraint /requirements-python3.7.txt
+RUN pip install -U scipy
 
 # Copy the airflow.cfg file (config)
 #COPY ./config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
