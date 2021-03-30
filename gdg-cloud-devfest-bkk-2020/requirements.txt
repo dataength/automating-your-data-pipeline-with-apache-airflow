@@ -94,7 +94,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
 pydata-google-auth==1.1.0
-Pygments==2.7.1
+Pygments==2.7.4
 PyJWT==1.7.1
 pyOpenSSL==19.1.0
 pyrsistent==0.17.3
