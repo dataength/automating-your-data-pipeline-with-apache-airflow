@@ -143,7 +143,7 @@ grpcio==1.31.0
 gunicorn==20.0.4
 hdfs==2.5.8
 hmsclient==0.1.1
-httplib2==0.18.1
+httplib2==0.19.0
 humanize==2.6.0
 hvac==0.10.5
 identify==1.4.28
