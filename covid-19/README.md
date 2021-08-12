@@ -1,10 +1,17 @@
 # COVID-19
 
-Python Version: 3.7.7
+Python Version: 3.9.6
 
 ## Quick Start
 
 https://airflow.apache.org/docs/stable/start.html
+
+## Initializing Airflow's DB
+
+```sh
+export AIRFLOW_HOME=$(pwd)/airflow
+airflow db init
+```
 
 ## Starting the Webserver
 
@@ -18,6 +25,20 @@ airflow webserver
 ```sh
 export AIRFLOW_HOME=$(pwd)/airflow
 airflow scheduler
+```
+
+## Creating Admin User
+
+```sh
+export AIRFLOW_HOME=$(pwd)/airflow
+airflow users create --username admin --firstname FIRST_NAME --lastname LAST_NAME --role Admin --email admin@example.org
+```
+
+## Installing Airflow with MySQL on Apple M1 Chip
+
+```sh
+brew install mysql
+CFLAGS="-I$(brew --prefix)/include" LDFLAGS="-L$(brew --prefix)/lib" pip install "apache-airflow[mysql]"
 ```
 
 ## Starting MySQL (Docker)
