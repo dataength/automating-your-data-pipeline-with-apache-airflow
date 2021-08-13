@@ -7,8 +7,11 @@ hdfs dfs -chmod g+w   /user/airflow
 # Move to the AIRFLOW HOME directory
 cd $AIRFLOW_HOME
 
-# Initiliase the metadatabase
-airflow initdb
+# Initialize the meta database
+airflow db init
+
+# Creating admin user
+airflow users create --username admin --password admin --firstname Admin --lastname Admin --role Admin --email admin@example.org
 
 # Run the scheduler in background
 airflow scheduler &> /dev/null &

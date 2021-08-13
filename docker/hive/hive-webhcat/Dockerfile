@@ -1,4 +1,4 @@
-FROM hive-base:latest
+FROM --platform=linux/amd64 hive-base:latest
 
 COPY startup.sh .
 
