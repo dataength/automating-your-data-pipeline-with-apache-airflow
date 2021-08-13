@@ -44,9 +44,12 @@ services:
     restart: always
     container_name: airflow
     environment:
-      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgres://airflow:airflow@airflow-metastore:5432/airflow_db
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
