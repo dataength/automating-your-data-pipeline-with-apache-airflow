@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM --platform=linux/amd64 openjdk:8-jdk-slim
 LABEL maintainer="MarcLamberti"
 
 ENV HADOOP_VERSION=3.1.1

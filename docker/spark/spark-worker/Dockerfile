@@ -1,4 +1,4 @@
-FROM spark-base:latest
+FROM --platform=linux/amd64 spark-base:latest
 
 ENV SPARK_WORKER_UI_PORT=8081
 ENV SPARK_WORKER_LOG_DIR=/var/logs/spark

@@ -1,4 +1,4 @@
-FROM spark-base:latest
+FROM --platform=linux/amd64 spark-base:latest
 
 ENV SPARK_MASTER_URL="spark://spark-master:7077"
 ENV SPARK_SUBMIT_ARGS=""

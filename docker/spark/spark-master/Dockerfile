@@ -1,4 +1,4 @@
-FROM spark-base:latest
+FROM --platform=linux/amd64 spark-base:latest
 
 ENV SPARK_MASTER_PORT=7077
 ENV SPARK_MASTER_UI_PORT=8082

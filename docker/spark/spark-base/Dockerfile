@@ -1,4 +1,4 @@
-FROM hive-base:latest
+FROM --platform=linux/amd64 hive-base:latest
 LABEL maintainer="MarcLamberti"
 
 # Defining useful environment variables

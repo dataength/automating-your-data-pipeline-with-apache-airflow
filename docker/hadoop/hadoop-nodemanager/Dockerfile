@@ -1,4 +1,4 @@
-FROM hadoop-base:latest
+FROM --platform=linux/amd64 hadoop-base:latest
 LABEL maintainer="MarcLamberti"
 
 COPY start-nodemanager.sh start-nodemanager.sh
