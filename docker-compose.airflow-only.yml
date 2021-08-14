@@ -1,9 +1,8 @@
-version: '3.8'
+version: "3.8"
 services:
-
-######################################################
-# DATASET
-######################################################
+  ######################################################
+  # DATASET
+  ######################################################
   dataset:
     build: ./docker/dataset
     image: dataength/dataset:skooldio
@@ -15,9 +14,9 @@ services:
       - POSTGRES_DB=breakfast
       - PGDATA=/var/lib/postgresql/data/pgdata
 
-######################################################
-# DATABASE SERVICE
-######################################################
+  ######################################################
+  # DATABASE SERVICE
+  ######################################################
   airflow-metastore:
     image: postgres:11.4-alpine
     restart: always
@@ -30,40 +29,42 @@ services:
       - POSTGRES_DB=airflow_db
       - PGDATA=/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow" ]
+      test: ["CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow"]
       timeout: 45s
       interval: 10s
       retries: 10
 
-######################################################
-# AIRFLOW
-######################################################
+  ######################################################
+  # AIRFLOW
+  ######################################################
   airflow:
     build: ./docker/airflow
     image: dataength/airflow:skooldio
     restart: always
     container_name: airflow
+    depends_on:
+      - airflow-metastore
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
-      AIRFLOW__CORE__FERNET_KEY: ''
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
     ports:
       - 8080:8080
     healthcheck:
-      test: [ "CMD", "nc", "-z", "airflow", "8080" ]
+      test: ["CMD", "nc", "-z", "airflow", "8080"]
       timeout: 45s
       interval: 10s
       retries: 10
 
-######################################################
-# EMAIL SERVICE
-######################################################
+  ######################################################
+  # EMAIL SERVICE
+  ######################################################
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog

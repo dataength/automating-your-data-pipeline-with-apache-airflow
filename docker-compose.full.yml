@@ -1,9 +1,8 @@
-version: '3.8'
+version: "3.8"
 services:
-
-######################################################
-# DATASET
-######################################################
+  ######################################################
+  # DATASET
+  ######################################################
   dataset:
     build: ./docker/dataset
     image: dataength/dataset:skooldio
@@ -15,9 +14,9 @@ services:
       - POSTGRES_DB=breakfast
       - PGDATA=/var/lib/postgresql/data/pgdata
 
-######################################################
-# DATABASE SERVICE
-######################################################
+  ######################################################
+  # DATABASE SERVICE
+  ######################################################
   postgres:
     build: ./docker/postgres
     image: dataength/postgres:skooldio
@@ -29,7 +28,7 @@ services:
       - POSTGRES_DB=airflow_db
       - PGDATA=/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow" ]
+      test: ["CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -46,14 +45,14 @@ services:
       - POSTGRES_DB=airflow_db
       - PGDATA=/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow" ]
+      test: ["CMD", "pg_isready", "-q", "-d", "airflow_db", "-U", "airflow"]
       timeout: 45s
       interval: 10s
       retries: 10
 
-######################################################
-# HADOOP SERVICES
-######################################################
+  ######################################################
+  # HADOOP SERVICES
+  ######################################################
   namenode:
     build: ./docker/hadoop/hadoop-namenode
     image: dataength/hadoop-namenode:skooldio
@@ -66,7 +65,7 @@ services:
     environment:
       - CLUSTER_NAME=hadoop_cluster
     healthcheck:
-      test: [ "CMD", "nc", "-z", "namenode", "9870" ]
+      test: ["CMD", "nc", "-z", "namenode", "9870"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -83,7 +82,7 @@ services:
     environment:
       - SERVICE_PRECONDITION=namenode:9870
     healthcheck:
-      test: [ "CMD", "nc", "-z", "datanode", "9864" ]
+      test: ["CMD", "nc", "-z", "datanode", "9864"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -103,7 +102,7 @@ services:
     environment:
       - SERVICE_PRECONDITION=namenode:9870 datanode:9864
     healthcheck:
-      test: [ "CMD", "nc", "-z", "resourcemanager", "8088" ]
+      test: ["CMD", "nc", "-z", "resourcemanager", "8088"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -120,7 +119,7 @@ services:
     environment:
       - SERVICE_PRECONDITION=namenode:9870 datanode:9864 resourcemanager:8088
     healthcheck:
-      test: [ "CMD", "nc", "-z", "nodemanager", "8042" ]
+      test: ["CMD", "nc", "-z", "nodemanager", "8042"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -139,7 +138,7 @@ services:
     environment:
       - SERVICE_PRECONDITION=namenode:9870 datanode:9864 resourcemanager:8088
     healthcheck:
-      test: [ "CMD", "nc", "-z", "historyserver", "8188" ]
+      test: ["CMD", "nc", "-z", "historyserver", "8188"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -158,7 +157,7 @@ services:
     ports:
       - "32761:9083"
     healthcheck:
-      test: [ "CMD", "nc", "-z", "hive-metastore", "9083" ]
+      test: ["CMD", "nc", "-z", "hive-metastore", "9083"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -176,7 +175,7 @@ services:
       - "32760:10000"
       - "32759:10002"
     healthcheck:
-      test: [ "CMD", "nc", "-z", "hive-server", "10002" ]
+      test: ["CMD", "nc", "-z", "hive-server", "10002"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -191,7 +190,7 @@ services:
     environment:
       - SERVICE_PRECONDITION=hive-server:10000
     healthcheck:
-      test: [ "CMD", "nc", "-z", "hive-webhcat", "50111" ]
+      test: ["CMD", "nc", "-z", "hive-webhcat", "50111"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -211,14 +210,14 @@ services:
     environment:
       - SERVICE_PRECONDITION=hive-server:10000 postgres:5432
     healthcheck:
-      test: [ "CMD", "nc", "-z", "hue", "8888" ]
+      test: ["CMD", "nc", "-z", "hue", "8888"]
       timeout: 45s
       interval: 10s
       retries: 10
 
-######################################################
-# SPARK SERVICES
-######################################################
+  ######################################################
+  # SPARK SERVICES
+  ######################################################
   spark-master:
     build: ./docker/spark/spark-master
     image: dataength/spark-master:skooldio
@@ -231,7 +230,7 @@ services:
       - ./mnt/spark/apps:/opt/spark-apps
       - ./mnt/spark/data:/opt/spark-data
     healthcheck:
-      test: [ "CMD", "nc", "-z", "spark-master", "8082" ]
+      test: ["CMD", "nc", "-z", "spark-master", "8082"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -247,7 +246,7 @@ services:
       - ./mnt/spark/apps:/opt/spark-apps
       - ./mnt/spark/data:/opt/spark-data
     healthcheck:
-      test: [ "CMD", "nc", "-z", "spark-worker", "8081" ]
+      test: ["CMD", "nc", "-z", "spark-worker", "8081"]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -266,41 +265,43 @@ services:
       - SPARK_MASTER_PORT=7077
       - DEPLOY_MODE=client
     healthcheck:
-      test: [ "CMD", "nc", "-z", "livy", "8998" ]
+      test: ["CMD", "nc", "-z", "livy", "8998"]
       timeout: 45s
       interval: 10s
       retries: 10
 
-######################################################
-# AIRFLOW
-######################################################
+  ######################################################
+  # AIRFLOW
+  ######################################################
   airflow:
     build: ./docker/airflow
     image: dataength/airflow:skooldio
     restart: always
     container_name: airflow
+    depends_on:
+      - airflow-metastore
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-metastore/airflow_db
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/1
-      AIRFLOW__CORE__FERNET_KEY: ''
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
     ports:
       - 8080:8080
     healthcheck:
-      test: [ "CMD", "nc", "-z", "airflow", "8080" ]
+      test: ["CMD", "nc", "-z", "airflow", "8080"]
       timeout: 45s
       interval: 10s
       retries: 10
 
   redis:
-    image: 'redis:5.0.5'
+    image: "redis:5.0.5"
     container_name: redis
 
   scheduler:
@@ -315,10 +316,10 @@ services:
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-metastore/airflow_db
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/1
-      AIRFLOW__CORE__FERNET_KEY: ''
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
@@ -335,10 +336,10 @@ services:
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-metastore/airflow_db
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/1
-      AIRFLOW__CORE__FERNET_KEY: ''
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
     volumes:
       - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
       - ./mnt/airflow/dags:/usr/local/airflow/dags
@@ -350,28 +351,29 @@ services:
     restart: always
     container_name: airflow-flower
     depends_on:
+      - airflow-metastore
       - redis
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-metastore/airflow_db
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/1
-      AIRFLOW__CORE__FERNET_KEY: ''
-      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
     ports:
       - "5555:5555"
     command: ["airflow", "celery", "flower"]
     healthcheck:
-      test: [ "CMD", "nc", "-z", "flower", "5555" ]
+      test: ["CMD", "nc", "-z", "flower", "5555"]
       timeout: 45s
       interval: 10s
       retries: 10
 
-######################################################
-# EMAIL SERVICE
-######################################################
+  ######################################################
+  # EMAIL SERVICE
+  ######################################################
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog
