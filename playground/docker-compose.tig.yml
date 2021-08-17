@@ -1,0 +1,93 @@
+version: '3.8'
+
+x-airflow-common:
+  &airflow-common
+  image: dataength/airflow:2.1.2-python3.8
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@postgres:5432/airflow
+      AIRFLOW__CORE__FERNET_KEY: FB0o_zt4e3Ziq3LdUUO7F2Z95cvFFx16hU8jTeR1ASM=
+      AIRFLOW__CORE__LOAD_EXAMPLES: False
+      AIRFLOW__CORE__LOGGING_LEVEL: INFO
+      AIRFLOW__METRICS__STATSD_ON: True
+      AIRFLOW__METRICS__STATSD_HOST: telegraf
+  volumes:
+    - ./racar/dags:/opt/airflow/dags
+    - ./airflow-data/logs:/opt/airflow/logs
+    - ./airflow-data/plugins:/opt/airflow/plugins
+    - ./airflow-data/airflow.cfg:/opt/airlfow/airflow.cfg
+    - ./airflow-data/shared:/tmp
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: airflow
+      POSTGRES_PORT: 5432
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  airflow-webserver:
+    << : *airflow-common
+    command: airflow webserver
+    ports:
+      - 8080:8080
+    container_name: airflow_webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    << : *airflow-common
+    command: airflow scheduler
+    container_name: airflow_scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:1.19.2
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:2.0.8
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:8.1.1-ubuntu
+    #volumes:
+    #  - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+    ports:
+      - "3000:3000"
+
+volumes:
+  airflow_postgres_data:
+  influxdb_data:
