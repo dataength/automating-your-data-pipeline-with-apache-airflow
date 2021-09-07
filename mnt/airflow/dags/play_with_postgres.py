@@ -42,12 +42,18 @@ def dump_transaction_data_each_week(yesterday_ds, **kwargs):
         print(each)
 
 
+default_args = {
+    "owner": "dataength",
+    "email": ["zkan@hey.com"],
+    "start_date": datetime.datetime(2017, 5, 5)
+}
 with DAG(
-        dag_id='play_with_postgres',
-        default_args={'start_date': datetime.datetime(2017, 5, 5)},
-        # schedule_interval='*/10 * * * *',
-        schedule_interval='0 0 * * THU',
-        catchup=False) as dag:
+    dag_id='play_with_postgres',
+    default_args=default_args,
+    # schedule_interval='*/10 * * * *',
+    schedule_interval='0 0 * * THU',
+    catchup=False
+) as dag:
 
     t1 = PostgresOperator(
         task_id='query_some_data',

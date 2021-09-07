@@ -1,126 +1,133 @@
+import csv
 import logging
 from datetime import timedelta
 
 from airflow import DAG
-from airflow.contrib.sensors.file_sensor import FileSensor
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.hive_operator import HiveOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.apache.hive.operators.hive import HiveOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.sensors.filesystem import FileSensor
 from airflow.utils import timezone
 
 import pandas as pd
 
 
-DATA_FOLDER = '/usr/local/airflow/dags/files'
-LANDING_ZONE = '/landing'
-CLEANED_ZONE = '/cleaned'
+DATA_FOLDER = "/usr/local/airflow/dags"
+LANDING_ZONE = "/landing"
+CLEANED_ZONE = "/cleaned"
+
+
+def _get_data_from_postgres():
+    pg_hook = PostgresHook(
+        postgres_conn_id="my_postgres_conn",
+        schema="breakfastatthefrat"
+    )
+    connection = pg_hook.get_conn()
+    cursor = connection.cursor()
+
+    sql = """
+        SELECT * FROM store
+    """
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    with open(f"{DATA_FOLDER}/store-lookup-table.csv", "w") as f:
+        writer = csv.writer(f)
+        columns = [(
+            "STORE_ID",
+            "STORE_NAME",
+            "ADDRESS_CITY_NAME",
+            "ADDRESS_STATE_PROV_CODE",
+            "MSA_CODE",
+            "SEG_VALUE_NAME",
+            "PARKING_SPACE_QTY",
+            "SALES_AREA_SIZE_NUM",
+            "AVG_WEEKLY_BASKETS",
+        )]
+        writer.writerows(columns)
+        writer.writerows(results)
+
+    logging.info("Extracted the data successfully")
+
+
+def _remove_column_header():
+    df = pd.read_csv(f"{DATA_FOLDER}/store-lookup-table.csv", header=1)
+    logging.info(df.head())
+    df.to_csv(f"{DATA_FOLDER}/stores-without-column-header.csv", index=False, header=False)
+
 
 default_args = {
-    'owner': 'zkan',
-    'email': ['zkan@hey.com'],
-    'sla': timedelta(seconds=30),
+    "owner": "zkan",
+    "email": ["zkan@hey.com"],
+    "sla": timedelta(seconds=30),
 }
-dag = DAG(
-    'store_lookup_pipeline',
-    schedule_interval='@hourly',
+with DAG(
+    "store_lookup_pipeline",
+    schedule_interval="@hourly",
     default_args=default_args,
     start_date=timezone.datetime(2020, 8, 15),
     catchup=False,
-)
+) as dag:
 
-start = DummyOperator(
-    task_id='start',
-    dag=dag,
-)
+    start = DummyOperator(task_id="start")
 
-# Download data from HDFS
-download_data_to_local = BashOperator(
-    task_id='download_data_to_local',
-    bash_command=f'hdfs dfs -get -f {LANDING_ZONE}/store-lookup-table-original.csv {DATA_FOLDER}/store-lookup-table.csv',
-    dag=dag,
-)
+    get_data_from_postgres = PythonOperator(
+        task_id="get_data_from_postgres",
+        python_callable=_get_data_from_postgres,
+    )
 
-# Check if file is available for further processing
-is_file_available = FileSensor(
-    task_id='is_file_available',
-    fs_conn_id='my_file_conn',
-    filepath='store-lookup-table.csv',
-    poke_interval=5,
-    timeout=100,
-    dag=dag,
-)
+    is_file_available = FileSensor(
+        task_id="is_file_available",
+        fs_conn_id="my_file_conn",
+        filepath=f"{DATA_FOLDER}/store-lookup-table.csv",
+        poke_interval=5,
+        timeout=100,
+    )
 
-def _remove_empty_columns():
-    df = pd.read_csv(f'{DATA_FOLDER}/store-lookup-table.csv', header=1)
-    logging.info(df.head())
-    df[
-        [
-            'STORE_ID', 
-            'STORE_NAME', 
-            'ADDRESS_CITY_NAME', 
-            'ADDRESS_STATE_PROV_CODE', 
-            'MSA_CODE', 
-            'SEG_VALUE_NAME', 
-            'PARKING_SPACE_QTY', 
-            'SALES_AREA_SIZE_NUM', 
-            'AVG_WEEKLY_BASKETS'
-        ]
-    ].to_csv(f'{DATA_FOLDER}/stores-with-good-columns.csv', index=False, header=False)
+    upload_to_landing_zone = BashOperator(
+        task_id="upload_to_landing_zone",
+        bash_command=f"hdfs dfs -put -f {DATA_FOLDER}/store-lookup-table.csv {LANDING_ZONE}/store-lookup-table.csv",
+    )
 
+    remove_column_header = PythonOperator(
+        task_id="remove_column_header",
+        python_callable=_remove_column_header,
+    )
 
-remove_empty_columns = PythonOperator(
-    task_id='remove_empty_columns',
-    python_callable=_remove_empty_columns,
-    # sla=timedelta(seconds=3),
-    dag=dag,
-)
+    upload_to_cleaned_zone = BashOperator(
+        task_id="upload_to_cleaned_zone",
+        bash_command=f"hdfs dfs -put -f {DATA_FOLDER}/stores-without-column-header.csv {CLEANED_ZONE}/stores-without-column-header.csv",
+    )
 
-# Upload processed data to cleaned zone
-upload_to_cleaned_zone = BashOperator(
-    task_id='upload_to_cleaned_zone',
-    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/stores-with-good-columns.csv {CLEANED_ZONE}/stores-with-good-columns.csv',
-    dag=dag,
-)
+    create_store_lookup_table = HiveOperator(
+        task_id="create_store_lookup_table",
+        hive_cli_conn_id="my_hive_conn",
+        hql="""
+            CREATE TABLE IF NOT EXISTS dim_store_lookup (
+                store_id                 INT,
+                store_name               VARCHAR(100),
+                address_city_name        VARCHAR(300),
+                address_state_prov_code  VARCHAR(2),
+                msa_code                 VARCHAR(100),
+                seg_value_name           VARCHAR(100),
+                parking_space_qty        INT,
+                sales_area_size_num      INT,
+                avg_weekly_baskets       DECIMAL(38, 2)
+            )
+            ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
+            STORED AS TEXTFILE;
+        """,
+    )
 
-# Create Hive table
-create_store_lookup_table = HiveOperator(
-    task_id='create_store_lookup_table',
-    hive_cli_conn_id='my_hive_conn',
-    hql='''
-        CREATE TABLE IF NOT EXISTS dim_store_lookup (
-            store_id                 INT,
-            store_name               VARCHAR(100),
-            address_city_name        VARCHAR(300),
-            address_state_prov_code  VARCHAR(2),
-            msa_code                 VARCHAR(100),
-            seg_value_name           VARCHAR(100),
-            parking_space_qty        DECIMAL(38, 2),
-            sales_area_size_num      INT,
-            avg_weekly_baskets       DECIMAL(38, 2)
-        )
-        ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
-        STORED AS TEXTFILE;
-    ''',
-    dag=dag,
-)
+    load_data_to_hive_table = HiveOperator(
+        task_id="load_data_to_hive_table",
+        hive_cli_conn_id="my_hive_conn",
+        hql=f"""
+            LOAD DATA INPATH '{CLEANED_ZONE}/stores-without-column-header.csv' OVERWRITE INTO TABLE dim_store_lookup;
+        """,
+    )
 
-# Load data in Hive table
-load_data_to_hive_table = HiveOperator(
-    task_id='load_data_to_hive_table',
-    hive_cli_conn_id='my_hive_conn',
-    hql=f'''
-        LOAD DATA INPATH '{CLEANED_ZONE}/stores-with-good-columns.csv' OVERWRITE INTO TABLE dim_store_lookup;
-    ''',
-    dag=dag,
-)
+    end = DummyOperator(task_id="end")
 
-end = DummyOperator(
-    task_id='end',
-    dag=dag,
-)
-
-# Define DAG dependencies
-start >> download_data_to_local >> is_file_available >> remove_empty_columns >> \
-    upload_to_cleaned_zone >> create_store_lookup_table >> \
-    load_data_to_hive_table >> end
+    start >> get_data_from_postgres >> is_file_available >> upload_to_landing_zone >> remove_column_header >> upload_to_cleaned_zone >> create_store_lookup_table >> load_data_to_hive_table >> end

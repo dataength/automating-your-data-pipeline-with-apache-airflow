@@ -1,117 +1,125 @@
+import csv
 import logging
-from datetime import timedelta
 
 from airflow import DAG
-from airflow.contrib.sensors.file_sensor import FileSensor
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash_operator import BashOperator
-from airflow.operators.hive_operator import HiveOperator
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash import BashOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.providers.apache.hive.operators.hive import HiveOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.sensors.filesystem import FileSensor
 from airflow.utils import timezone
 
 import pandas as pd
 
 
-DATA_FOLDER = '/usr/local/airflow/dags/files'
-LANDING_ZONE = '/landing'
-CLEANED_ZONE = '/cleaned'
+DATA_FOLDER = "/usr/local/airflow/dags"
+LANDING_ZONE = "/landing"
+CLEANED_ZONE = "/cleaned"
+
+
+def _get_data_from_postgres():
+    pg_hook = PostgresHook(
+        postgres_conn_id="my_postgres_conn",
+        schema="breakfastatthefrat"
+    )
+    connection = pg_hook.get_conn()
+    cursor = connection.cursor()
+
+    sql = """
+        SELECT * FROM product
+    """
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    with open(f"{DATA_FOLDER}/product-lookup-table.csv", "w") as f:
+        writer = csv.writer(f)
+        columns = [(
+            "UPC",
+            "DESCRIPTION",
+            "MANUFACTURER",
+            "CATEGORY",
+            "SUB_CATEGORY",
+            "PRODUCT_SIZE",
+        )]
+        writer.writerows(columns)
+        writer.writerows(results)
+
+    logging.info("Extracted the data successfully")
+
+
+def _remove_column_header():
+    df = pd.read_csv(f"{DATA_FOLDER}/product-lookup-table.csv", header=1)
+    logging.info(df.head())
+    df.to_csv(f"{DATA_FOLDER}/products-without-column-header.csv", index=False, header=False)
+
 
 default_args = {
-    'owner': 'zkan',
-    'email': ['zkan@hey.com'],
+    "owner": "zkan",
+    "email": ["zkan@hey.com"],
 }
-dag = DAG(
-    'product_lookup_pipeline',
-    schedule_interval='@hourly',
+with DAG(
+    "product_lookup_pipeline",
+    schedule_interval="@hourly",
     default_args=default_args,
-    start_date=timezone.datetime(2020, 8, 15),
+    start_date=timezone.datetime(2021, 9, 1),
     catchup=False,
-)
+) as dag:
 
-start = DummyOperator(
-    task_id='start',
-    dag=dag,
-)
+    start = DummyOperator(task_id="start")
 
-# Download data from HDFS
-download_data_to_local = BashOperator(
-    task_id='download_data_to_local',
-    bash_command=f'hdfs dfs -get -f {LANDING_ZONE}/product-lookup-table-original.csv {DATA_FOLDER}/product-lookup-table.csv',
-    dag=dag,
-)
+    get_data_from_postgres = PythonOperator(
+        task_id="get_data_from_postgres",
+        python_callable=_get_data_from_postgres,
+    )
 
-# Check if file is available for further processing
-is_file_available = FileSensor(
-    task_id='is_file_available',
-    fs_conn_id='my_file_conn',
-    filepath='product-lookup-table.csv',
-    poke_interval=5,
-    timeout=100,
-    dag=dag,
-)
+    is_file_available = FileSensor(
+        task_id="is_file_available",
+        fs_conn_id="my_file_conn",
+        filepath=f"{DATA_FOLDER}/product-lookup-table.csv",
+        poke_interval=5,
+        timeout=100,
+    )
 
-def _remove_empty_columns():
-    df = pd.read_csv(f'{DATA_FOLDER}/product-lookup-table.csv', header=1)
-    logging.info(df.head())
-    df[[
-        'UPC', 
-        'DESCRIPTION', 
-        'MANUFACTURER', 
-        'CATEGORY', 
-        'SUB_CATEGORY', 
-        'PRODUCT_SIZE'
-    ]].to_csv(f'{DATA_FOLDER}/products-with-good-columns.csv', index=False, header=False)
+    upload_to_landing_zone = BashOperator(
+        task_id="upload_to_landing_zone",
+        bash_command=f"hdfs dfs -put -f {DATA_FOLDER}/product-lookup-table.csv {LANDING_ZONE}/product-lookup-table.csv",
+    )
 
+    remove_column_header = PythonOperator(
+        task_id="remove_column_header",
+        python_callable=_remove_column_header,
+    )
 
-remove_empty_columns = PythonOperator(
-    task_id='remove_empty_columns',
-    python_callable=_remove_empty_columns,
-    # sla=timedelta(seconds=3),
-    dag=dag,
-)
+    upload_to_cleaned_zone = BashOperator(
+        task_id="upload_to_cleaned_zone",
+        bash_command=f"hdfs dfs -put -f {DATA_FOLDER}/products-without-column-header.csv {CLEANED_ZONE}/products-without-column-header.csv",
+    )
 
-# Upload processed data to cleaned zone
-upload_to_cleaned_zone = BashOperator(
-    task_id='upload_to_cleaned_zone',
-    bash_command=f'hdfs dfs -put -f {DATA_FOLDER}/products-with-good-columns.csv {CLEANED_ZONE}/products-with-good-columns.csv',
-    dag=dag,
-)
+    create_product_lookup_table = HiveOperator(
+        task_id="create_product_lookup_table",
+        hive_cli_conn_id="my_hive_conn",
+        hql="""
+            CREATE TABLE IF NOT EXISTS dim_product_lookup (
+                upc           VARCHAR(100),
+                description   VARCHAR(300),
+                manufacturer  VARCHAR(100),
+                category      VARCHAR(100),
+                sub_category  VARCHAR(100),
+                product_size  VARCHAR(100)
+            )
+            ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
+            STORED AS TEXTFILE
+        """,
+    )
 
-# Create Hive table
-create_product_lookup_table = HiveOperator(
-    task_id='create_product_lookup_table',
-    hive_cli_conn_id='my_hive_conn',
-    hql='''
-        CREATE TABLE IF NOT EXISTS dim_product_lookup (
-            upc           VARCHAR(100),
-            description   VARCHAR(300),
-            manufacturer  VARCHAR(100),
-            category      VARCHAR(100),
-            sub_category  VARCHAR(100),
-            product_size  DECIMAL(38, 2)
-        )
-        ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n'
-        STORED AS TEXTFILE
-    ''',
-    dag=dag,
-)
+    load_data_to_hive_table = HiveOperator(
+        task_id="load_data_to_hive_table",
+        hive_cli_conn_id="my_hive_conn",
+        hql=f"""
+            LOAD DATA INPATH '{CLEANED_ZONE}/products-without-column-header.csv' OVERWRITE INTO TABLE dim_product_lookup;
+        """,
+    )
 
-# Load data in Hive table
-load_data_to_hive_table = HiveOperator(
-    task_id='load_data_to_hive_table',
-    hive_cli_conn_id='my_hive_conn',
-    hql=f'''
-        LOAD DATA INPATH '{CLEANED_ZONE}/products-with-good-columns.csv' OVERWRITE INTO TABLE dim_product_lookup;
-    ''',
-    dag=dag,
-)
+    end = DummyOperator(task_id="end")
 
-end = DummyOperator(
-    task_id='end',
-    dag=dag,
-)
-
-# Define DAG dependencies
-start >> download_data_to_local >> is_file_available >> remove_empty_columns >> \
-    upload_to_cleaned_zone >> create_product_lookup_table >> \
-    load_data_to_hive_table >> end
+    start >> get_data_from_postgres >> is_file_available >> upload_to_landing_zone >> remove_column_header >> upload_to_cleaned_zone >> create_product_lookup_table >> load_data_to_hive_table >> end
