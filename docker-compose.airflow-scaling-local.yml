@@ -47,7 +47,7 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metastore:5432/airflow_db
-      AIRFLOW__CORE__FERNET_KEY: ""
+      AIRFLOW__CORE__FERNET_KEY: "EMFOyePzhgJ1OOznc75nT6tWlq4Bk5Un3J8jgOyverQ="
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
