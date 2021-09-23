@@ -1,23 +1,22 @@
 from airflow.plugins_manager import AirflowPlugin
-from flask_admin.base import MenuLink
 
 
-dataength_link = MenuLink(
-    category='Skooldio Course',
-    name='Data Eng Thailand',
-    url='https://www.facebook.com/dataength/')
+dataength_link = {
+    "name": "Data Eng Thailand",
+    "href": "https://www.facebook.com/dataength/",
+    "category": "Skooldio Course",
+}
 
-airflow_course_link = MenuLink(
-    category='Skooldio Course',
-    name='Automating Your Data Pipelines with Apache Airflow',
-    url='https://www.skooldio.com/workshops/automating-your-data-piplines-with-apache-airflow?skuCode=W16331-01')
+airflow_course_link = {
+    "name": "Skooldio Course",
+    "href": "https://www.skooldio.com/workshops/automating-your-data-piplines-with-apache-airflow",
+    "category": "Skooldio Course",
+}
 
 
-class AirflowTestPlugin(AirflowPlugin):
-    name = "AirflowCourseMenuLinks"
-    operators = []
-    flask_blueprints = []
-    hooks = []
-    executors = []
-    admin_views = []
-    menu_links = [airflow_course_link, dataength_link]
+class MyAirflowPlugin(AirflowPlugin):
+    name = "airflow_course_plugin"
+    appbuilder_menu_items = [
+        dataength_link,
+        airflow_course_link,
+    ]
