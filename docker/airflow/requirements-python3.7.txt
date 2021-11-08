@@ -466,7 +466,7 @@ sphinxcontrib-serializinghtml==1.1.5
 sphinxcontrib-spelling==5.2.1
 spython==0.1.14
 sshtunnel==0.1.5
-starkbank-ecdsa==1.1.1
+starkbank-ecdsa==2.0.1
 statsd==3.3.0
 swagger-ui-bundle==0.0.8
 tableauserverclient==0.15.0
