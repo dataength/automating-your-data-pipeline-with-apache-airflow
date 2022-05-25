@@ -69,7 +69,7 @@ protobuf==3.17.3
 psutil==5.8.0
 pycparser==2.20
 Pygments==2.9.0
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyrsistent==0.18.0
 python-daemon==2.3.0
 python-dateutil==2.8.2
