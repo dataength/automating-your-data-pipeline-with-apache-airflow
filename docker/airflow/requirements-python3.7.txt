@@ -267,7 +267,7 @@ hdfs==2.6.0
 hmsclient==0.1.1
 httpcore==0.13.6
 httplib2==0.19.1
-httpx==0.18.2
+httpx==0.23.0
 humanize==3.10.0
 hvac==0.10.14
 identify==2.2.10
