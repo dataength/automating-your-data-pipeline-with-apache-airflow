@@ -59,7 +59,7 @@ marshmallow-oneofschema==3.0.1
 marshmallow-sqlalchemy==0.23.1
 mysql-connector-python==8.0.22
 mysqlclient==2.0.3
-numpy==1.21.1
+numpy==1.22.0
 openapi-schema-validator==0.1.5
 openapi-spec-validator==0.3.1
 pandas==1.3.1
