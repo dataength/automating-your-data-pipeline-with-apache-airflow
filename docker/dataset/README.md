@@ -38,6 +38,6 @@ spend:STRING,
 price:STRING,
 base_price:STRING,
 feature:STRING,
-display:STRING,,
+display:STRING,
 tpr_only:STRING
 ```
