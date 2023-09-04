@@ -99,7 +99,7 @@ jsonschema==3.2.0
 lazy-object-proxy==1.6.0
 libcst==0.3.20
 lockfile==0.12.2
-Mako==1.1.4
+Mako==1.2.2
 Markdown==3.3.4
 MarkupSafe==1.1.1
 marshmallow==3.13.0
